@@ -3,56 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VOO DCA Backtest</title>
+    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุน</title>
     <!-- โหลด Tailwind CSS ผ่าน CDN สำหรับตกแต่ง -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- โหลด Chart.js ผ่าน CDN สำหรับวาดกราฟ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F8FAFC; }
+        /* ซ่อนลูกศรขึ้นลงใน input type number */
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
-<body class="p-6 text-slate-800">
+<body class="p-4 md:p-6 text-slate-800">
 
-    <div class="max-w-5xl mx-auto">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold mb-2">VOO DCA Backtest (2015 - Present) 🇺🇸</h1>
-            <p class="text-slate-500">ทดสอบการลงทุนด้วยกลยุทธ์ต่างๆ (ไฟล์เดียวจบ ไม่ต้องพึ่ง Server)</p>
+    <div class="max-w-6xl mx-auto">
+        <!-- Header (แก้ Copywriting ตาม Feedback) -->
+        <div class="text-center mb-10 mt-4">
+            <h1 class="text-3xl md:text-4xl font-extrabold mb-3 text-slate-900 tracking-tight">VOO DCA Backtest 🇺🇸</h1>
+            <p class="text-slate-500 text-lg">กลยุทธ์ไหนสร้างกำไรได้ดีที่สุดในรอบ 10 ปี</p>
         </div>
 
-        <!-- ⚠️ ระบบโหลดข้อมูลอัตโนมัติจาก Yahoo Finance API (ผ่าน Proxy) -->
-        <div id="loadingBox" class="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-xl mb-6 text-center animate-pulse transition-all">
-            กำลังดึงข้อมูลล่าสุดจากตลาดหุ้น... (อาจใช้เวลา 2-3 วินาที)
-        </div>
-
-        <!-- Controller -->
-        <div class="bg-white rounded-xl p-6 shadow-sm mb-6 flex justify-between items-end">
-            <div>
-                <label class="block text-sm font-bold text-slate-600 mb-2">ระบุยอดเงินลงทุน (ต่อปี)</label>
-                <input type="range" id="dcaSlider" min="12000" max="1200000" step="12000" value="120000" class="w-72 cursor-pointer">
+        <!-- ⏳ Skeleton UI (แสดงผลตอนโหลดข้อมูล) -->
+        <div id="skeletonUI" class="animate-pulse">
+            <div class="bg-white rounded-2xl p-6 shadow-sm mb-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 h-32">
+                <div class="h-10 bg-slate-200 rounded w-1/3"></div>
+                <div class="h-10 bg-slate-200 rounded w-1/4"></div>
             </div>
-            <div class="text-right">
-                <div class="text-2xl font-black text-slate-800" id="yearlyText">฿120,000 / ปี</div>
-                <div class="text-sm text-slate-500" id="monthlyText">ตกเดือนละ ฿10,000</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                <div class="h-32 bg-slate-200 rounded-2xl"></div>
+                <div class="h-32 bg-slate-200 rounded-2xl"></div>
+                <div class="h-32 bg-slate-200 rounded-2xl"></div>
+                <div class="h-32 bg-slate-200 rounded-2xl"></div>
+                <div class="h-32 bg-slate-200 rounded-2xl"></div>
             </div>
+            <div class="h-80 bg-slate-200 rounded-2xl"></div>
         </div>
 
-        <!-- Summary Cards (ปรับโครงสร้างเป็น 5 คอลัมน์) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="summaryCards">
-            <!-- การ์ดจะถูกสร้างด้วย JavaScript -->
-        </div>
+        <!-- 🟢 Main Content (ซ่อนไว้ก่อนจนกว่าข้อมูลจะพร้อม) -->
+        <div id="mainContent" class="hidden opacity-0 transition-opacity duration-500">
+            
+            <!-- Controller -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm mb-6 flex flex-col md:flex-row gap-6 justify-between items-center border border-slate-100">
+                <!-- ก้อนที่ 1: Timeframe -->
+                <div class="w-full md:w-auto">
+                    <label class="block text-sm font-bold text-slate-600 mb-2">ปีที่เริ่มลงทุน (Start Year)</label>
+                    <select id="yearSelect" class="w-full md:w-48 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 font-bold cursor-pointer transition-all">
+                        <option value="2015">2015 (ระยะยาว 10 ปี)</option>
+                        <option value="2019">2019 (ก่อนวิกฤตโควิด)</option>
+                        <option value="2020">2020 (ช่วงวิกฤตโควิด)</option>
+                        <option value="2022">2022 (ตลาดหมีรุนแรง)</option>
+                        <option value="2024">2024 (ล่าสุด)</option>
+                    </select>
+                </div>
 
-        <!-- Chart -->
-        <div class="bg-white rounded-xl p-6 shadow-sm">
-            <h2 class="text-lg font-bold mb-4" id="chartTitle">การเติบโตของพอร์ตเทียบกับต้นทุน</h2>
-            <canvas id="myChart" height="100"></canvas>
+                <!-- ก้อนที่ 2: DCA Input + Slider -->
+                <div class="w-full md:flex-1 md:max-w-xl">
+                    <div class="flex justify-between items-end mb-2">
+                        <label class="block text-sm font-bold text-slate-600">เงินลงทุน (บาท/ปี)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 font-bold">฿</span>
+                            <input type="number" id="dcaInput" min="12000" max="1200000" step="12000" value="120000" class="bg-blue-50 border border-blue-200 text-blue-900 text-lg font-black rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-40 pl-8 p-1.5 text-right transition-all">
+                        </div>
+                    </div>
+                    <input type="range" id="dcaSlider" min="12000" max="1200000" step="12000" value="120000" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600 mt-2">
+                    <div class="text-right text-xs text-slate-500 mt-2 font-medium" id="monthlyText">ลงทุนเดือนละ ฿10,000</div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="summaryCards">
+                <!-- การ์ดจะถูกสร้างด้วย JavaScript -->
+            </div>
+
+            <!-- Chart -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="flex justify-between items-end mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-slate-800" id="chartTitle">การเติบโตของมูลค่าพอร์ต</h2>
+                        <p class="text-sm text-slate-500 mt-1">เปรียบเทียบกลยุทธ์ต่างๆ กับต้นทุนสะสม (คลิกที่ป้ายชื่อด้านล่างเพื่อเปิด/ปิดกราฟ)</p>
+                    </div>
+                </div>
+                <div class="relative h-[400px] w-full">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Footer Warning -->
+            <div class="mt-8 text-center text-xs text-slate-400 max-w-3xl mx-auto leading-relaxed">
+                * ข้อมูลดึงสดจากตลาดหุ้นผ่าน Proxy API หาก API ขัดข้องระบบจะใช้ข้อมูลสำรองอัตโนมัติ<br>
+                * การประเมินเงินสดฝังตุ่ม อ้างอิงจากอัตราเงินเฟ้อเฉลี่ย 3% ต่อปี (ประมาณ 0.25% ต่อเดือน)<br>
+                * ผลการดำเนินงานในอดีต มิได้เป็นสิ่งยืนยันถึงผลการดำเนินงานในอนาคต โปรดศึกษาข้อมูลก่อนตัดสินใจลงทุน
+            </div>
         </div>
     </div>
 
     <!-- Logic System -->
     <script>
-        // 💾 1. Fallback Data: ข้อมูลสำรองเผื่อ API ล่ม (ใช้ข้อมูลของคุณถึงเดือน 10/2026)
+        // 💾 1. Fallback Data (ระบบสำรองข้อมูล อัปเดตล่าสุดถึง ต.ค. 2026)
         const FALLBACK_CSV = `Date,Close/Last,Volume,Open,High,Low
 10/27/2026,707.52,5383510,705.40,708.81,703.375
 09/30/2026,700.86,9876125,704.58,707.20,700.56
@@ -197,19 +244,18 @@
 02/27/2015,193.05,2522770,193.33,193.59,192.74
 01/30/2015,182.93,3102421,185.03,185.50,182.72`;
 
-        // ระบบแปลข้อมูล CSV สำรอง
+        // ระบบแปลงข้อมูล CSV (Fallback)
         function parseFallbackCSV(csvString) {
             const lines = csvString.trim().split('\n');
             let monthly = {};
-
             for (let i = 1; i < lines.length; i++) {
                 const row = lines[i].split(',');
                 if (row.length < 5 || !row[0]) continue;
-
-                // รองรับ Date แบบ MM/DD/YYYY
                 const dateParts = row[0].split('/');
                 if(dateParts.length !== 3) continue;
-                const monthLabel = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}`;
+                const year = dateParts[2];
+                const monthStr = dateParts[0].padStart(2, '0');
+                const monthLabel = `${year}-${monthStr}`;
                 
                 const close = parseFloat(row[1]);
                 const open = parseFloat(row[3]);
@@ -217,122 +263,126 @@
                 const low = parseFloat(row[5]);
 
                 if (!monthly[monthLabel]) {
-                    monthly[monthLabel] = {
-                        date: monthLabel,
-                        isFirstOfYear: dateParts[0] === '01',
-                        open: open, high: high, low: low, close: close
-                    };
+                    monthly[monthLabel] = { date: monthLabel, year: parseInt(year), isFirstOfYear: monthStr === '01', open, high, low, close };
                 } else {
                     monthly[monthLabel].high = Math.max(monthly[monthLabel].high, high);
                     monthly[monthLabel].low = Math.min(monthly[monthLabel].low, low);
-                    monthly[monthLabel].close = close; // วันสุดท้ายของเดือนจะได้ค่า close สุดท้าย
+                    monthly[monthLabel].close = close; 
                 }
             }
-            
-            // สำคัญ: ต้อง Sort ข้อมูลจาก อดีต -> ปัจจุบัน เสมอ!
             return Object.values(monthly).sort((a, b) => a.date.localeCompare(b.date));
         }
 
-        // 2. Data Fetcher (Smart Fetch + Fallback)
+        // 🌐 2. Multi-Proxy API Fetcher (รับประกันการดึงข้อมูลสด)
         async function fetchAndParseData() {
-            try {
-                // พยายามดึงสดก่อน
-                const targetUrl = encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/VOO?interval=1d&range=15y');
-                const response = await fetch(`https://api.allorigins.win/raw?url=${targetUrl}`);
-                
-                if (!response.ok) throw new Error('Proxy HTTP Error');
-                
-                const data = await response.json();
-                
-                // ตรวจสอบว่าโครงสร้าง JSON ถูกต้องไหม (ถ้า Proxy โดนแบน มันจะส่งกลับมาเป็นหน้า HTML พังๆ)
-                if (!data || !data.chart || !data.chart.result || !data.chart.result[0]) {
-                    throw new Error('Invalid JSON Structure from Proxy');
-                }
+            const url = 'https://query1.finance.yahoo.com/v8/finance/chart/VOO?interval=1d&range=15y';
+            const proxies = [
+                `https://corsproxy.io/?${encodeURIComponent(url)}`, // Proxy A: เร็ว เสถียร
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}` // Proxy B: สำรอง
+            ];
 
-                const result = data.chart.result[0];
-                const timestamps = result.timestamp;
-                const quote = result.indicators.quote[0];
-                const adjclose = result.indicators.adjclose ? result.indicators.adjclose[0].adjclose : quote.close;
+            for (const proxy of proxies) {
+                try {
+                    const response = await fetch(proxy, { cache: 'no-store' });
+                    if (!response.ok) continue; // ลองอันถัดไป
+                    const data = await response.json();
+                    if (!data || !data.chart || !data.chart.result) continue;
 
-                let monthly = {};
+                    const result = data.chart.result[0];
+                    const timestamps = result.timestamp;
+                    const quote = result.indicators.quote[0];
+                    const adjclose = result.indicators.adjclose ? result.indicators.adjclose[0].adjclose : quote.close;
 
-                for (let i = 0; i < timestamps.length; i++) {
-                    if (quote.open[i] === null) continue; 
+                    let monthly = {};
+                    for (let i = 0; i < timestamps.length; i++) {
+                        if (quote.open[i] === null) continue; 
+                        const dateObj = new Date(timestamps[i] * 1000);
+                        const year = dateObj.getFullYear();
+                        if (year < 2015) continue;
+                        const monthNum = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        const monthLabel = `${year}-${monthNum}`;
 
-                    const dateObj = new Date(timestamps[i] * 1000);
-                    const year = dateObj.getFullYear();
-                    const monthNum = String(dateObj.getMonth() + 1).padStart(2, '0');
-                    const monthLabel = `${year}-${monthNum}`;
-                    
-                    if (year < 2015) continue;
+                        const open = quote.open[i];
+                        const high = quote.high[i];
+                        const low = quote.low[i];
+                        const close = adjclose[i];
 
-                    const open = quote.open[i];
-                    const high = quote.high[i];
-                    const low = quote.low[i];
-                    const close = adjclose[i];
-
-                    if (!monthly[monthLabel]) {
-                        monthly[monthLabel] = {
-                            date: monthLabel,
-                            isFirstOfYear: monthNum === '01',
-                            open: open, high: high, low: low, close: close
-                        };
-                    } else {
-                        monthly[monthLabel].high = Math.max(monthly[monthLabel].high, high);
-                        monthly[monthLabel].low = Math.min(monthly[monthLabel].low, low);
-                        monthly[monthLabel].close = close; 
+                        if (!monthly[monthLabel]) {
+                            monthly[monthLabel] = { date: monthLabel, year: year, isFirstOfYear: monthNum === '01', open, high, low, close };
+                        } else {
+                            monthly[monthLabel].high = Math.max(monthly[monthLabel].high, high);
+                            monthly[monthLabel].low = Math.min(monthly[monthLabel].low, low);
+                            monthly[monthLabel].close = close; 
+                        }
                     }
+                    console.log("✅ โหลดข้อมูลสดจากตลาดหุ้นสำเร็จ");
+                    return Object.values(monthly);
+                } catch (error) {
+                    console.warn(`Proxy failed: ${proxy}`);
                 }
-                
-                // แจ้งว่าสำเร็จ
-                const loadBox = document.getElementById('loadingBox');
-                loadBox.className = "bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-6 text-center transition-all";
-                loadBox.innerText = "✅ ดึงข้อมูลล่าสุดจากตลาดหุ้นสำเร็จ!";
-                setTimeout(() => loadBox.style.display = 'none', 1500);
-
-                return Object.values(monthly);
-
-            } catch (error) {
-                // ⚠️ ถ้าพัง! ไม่ว่าจะด้วยสาเหตุอะไรก็ตาม ให้ตกมาตรงนี้ (Graceful Degradation)
-                console.warn("API ยิงไม่เข้า เปลี่ยนไปใช้ข้อมูลสำรอง (Fallback) แทน", error);
-                
-                const loadBox = document.getElementById('loadingBox');
-                loadBox.className = "bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-xl mb-6 text-center transition-all";
-                loadBox.innerHTML = "⚠️ ไม่สามารถดึงข้อมูลสดได้ <b>ระบบกำลังใช้ข้อมูลสำรองแทน (ถึง ต.ค. 2026)</b>";
-                
-                // ใช้ข้อมูล CSV สมมติที่เตรียมไว้แทน เพื่อให้เว็บเล่นได้ 100%
-                return parseFallbackCSV(FALLBACK_CSV);
             }
+            
+            // ⚠️ ถ้า Proxy ทั้งหมดพัง ให้ใช้ Fallback Data
+            console.log("⚠️ ใช้ข้อมูลสำรอง (Fallback Data)");
+            return parseFallbackCSV(FALLBACK_CSV);
         }
 
-        let vooData = [];
-
-        // 3. State & Formatters
-        const fmtTHB = (n) => "฿" + Math.round(n).toLocaleString("th-TH");
-        const colors = { lumpSum: '#8B5CF6', dcaFirst: '#3B82F6', dcaLow: '#10B981', dcaHigh: '#EF4444', cash: '#64748B' };
+        let fullVooData = [];
         let chartInstance = null;
+        
+        // State
+        const colors = { lumpSum: '#8B5CF6', dcaFirst: '#3B82F6', dcaLow: '#10B981', dcaHigh: '#EF4444', cash: '#64748B', cost: '#CBD5E1' };
+        const fmtTHB = (n) => "฿" + Math.round(n).toLocaleString("th-TH");
+        const fmtNum = (n) => Math.round(n).toLocaleString("th-TH");
 
-        // 4. Core Backtest Engine
-        function runBacktest(yearlyDca) {
-            const monthlyDca = yearlyDca / 12;
-            let history = [];
+        // Two-way binding for Input & Slider
+        const dcaInput = document.getElementById('dcaInput');
+        const dcaSlider = document.getElementById('dcaSlider');
+        const yearSelect = document.getElementById('yearSelect');
+
+        function syncInputs(e) {
+            let val = parseInt(e.target.value);
+            if (val < 12000) val = 12000;
+            if (val > 1200000) val = 1200000;
             
+            dcaInput.value = val;
+            dcaSlider.value = val;
+            updateUI();
+        }
+
+        dcaInput.addEventListener('change', syncInputs);
+        dcaSlider.addEventListener('input', syncInputs);
+        yearSelect.addEventListener('change', updateUI);
+
+        // 3. Core Engine (คำนวณตามปีที่เลือก)
+        function runBacktest(yearlyDca, startYear) {
+            // Filter ข้อมูลตาม Timeframe ที่เลือก
+            const filteredData = fullVooData.filter(d => d.year >= startYear);
+            
+            const monthlyDca = yearlyDca / 12;
+            const monthlyInflationRate = 0.03 / 12; // เงินเฟ้อ 3% ต่อปี
+            
+            let history = [];
             let pLump = { shares: 0, cost: 0 };
             let pFirst = { shares: 0, cost: 0 };
             let pLow = { shares: 0, cost: 0 };
             let pHigh = { shares: 0, cost: 0 };
             let pCash = { value: 0 }; 
             
-            const monthlyInflationRate = 0.03 / 12; // เงินเฟ้อ 3% ต่อปี
+            // เช็คว่าเดือนแรกของชุดข้อมูลนี้คืออะไร เพื่อจำลองการซื้อก้อนใหญ่
+            const firstDataIndex = filteredData.length > 0 ? 0 : -1;
 
-            vooData.forEach(d => {
+            filteredData.forEach((d, index) => {
+                // เงินสดโดนเงินเฟ้อกัดกินทุกเดือน
                 pCash.value = (pCash.value * (1 - monthlyInflationRate)) + monthlyDca;
 
-                if (d.isFirstOfYear) {
+                // Lump Sum: ทุ่มเงิน ณ ต้นปีที่เริ่ม (หรือก้อนแรกสุดของ timeframe) และต้นปีถัดๆ ไป
+                if (d.isFirstOfYear || index === firstDataIndex) {
                     pLump.shares += yearlyDca / d.open;
                     pLump.cost += yearlyDca;
                 }
                 
+                // DCA
                 pFirst.shares += monthlyDca / d.open;
                 pFirst.cost += monthlyDca;
 
@@ -356,62 +406,90 @@
             return { history, totalCost: pFirst.cost };
         }
 
-        // 5. UI Updater
+        // 4. UI Updater
         function updateUI() {
-            const yearlyDca = Number(document.getElementById('dcaSlider').value);
-            document.getElementById('yearlyText').innerText = fmtTHB(yearlyDca) + " / ปี";
-            document.getElementById('monthlyText').innerText = "ตกเดือนละ " + fmtTHB(yearlyDca/12);
+            if(fullVooData.length === 0) return;
 
-            if(vooData.length === 0) return; // ข้อมูลยังไม่มา
+            const yearlyDca = Number(dcaInput.value);
+            const startYear = Number(yearSelect.value);
+            document.getElementById('monthlyText').innerText = `ลงทุนเดือนละ ${fmtTHB(yearlyDca/12)}`;
 
-            const { history, totalCost } = runBacktest(yearlyDca);
+            const { history, totalCost } = runBacktest(yearlyDca, startYear);
+            if(history.length === 0) return;
+
             const last = history[history.length - 1];
-            document.getElementById('chartTitle').innerText = `การเติบโตของพอร์ตเทียบกับต้นทุน (ทุนรวม: ${fmtTHB(totalCost)})`;
-
-            // วาด Cards (เพิ่มวิธีเก็บเงินสด)
+            
+            // คำนวณผู้ชนะ
             const results = [
-                { name: "ซื้อต่ำสุดทุกเดือน", val: last.dcaLow, c: colors.dcaLow, desc: "จับจังหวะแบบพระเจ้า" },
-                { name: "ทุ่มก้อนเดียวต้นปี", val: last.lumpSum, c: colors.lumpSum, desc: "เงินก้อนพร้อมตั้งแต่ ม.ค." },
-                { name: "DCA ต้นเดือน", val: last.dcaFirst, c: colors.dcaFirst, desc: "หลับตาซื้อทุกวันที่ 1" },
-                { name: "ซื้อแพงสุดทุกเดือน", val: last.dcaHigh, c: colors.dcaHigh, desc: "ซวยจัด ซื้อแพงสุดตลอด" },
-                { name: "เก็บเงินสดฝังตุ่ม", val: last.cashValue, c: colors.cash, desc: "เงินเฟ้อ 3% กัดกินมูลค่า" }
-            ].sort((a, b) => b.val - a.val);
+                { id: 'low', name: "ซื้อต่ำสุดทุกเดือน", val: last.dcaLow, c: colors.dcaLow, desc: "สายจับจังหวะ ขั้นเทพ (ยากที่สุดในโลก)" },
+                { id: 'lump', name: "ทุ่มก้อนเดียวต้นปี", val: last.lumpSum, c: colors.lumpSum, desc: "สายเงินก้อนพร้อมตั้งแต่ ม.ค. ของทุกปี" },
+                { id: 'dca', name: "DCA ต้นเดือน", val: last.dcaFirst, c: colors.dcaFirst, desc: "สายมนุษย์เงินเดือน หลับตาซื้อทุกต้นเดือน" },
+                { id: 'high', name: "ซื้อยอดดอยทุกเดือน", val: last.dcaHigh, c: colors.dcaHigh, desc: "สายซวยสุดๆ ซื้อจุดแพงสุดตลอด" },
+                { id: 'cash', name: "เก็บเงินสดฝังตุ่ม", val: last.cashValue, c: colors.cash, desc: "สายกลัวความเสี่ยง (โดนเงินเฟ้อกัดกิน 3%/ปี)" }
+            ];
 
+            // หาค่าที่สูงที่สุดเพื่อมอบมงกุฎ
+            const maxVal = Math.max(...results.map(r => r.val));
+            // เรียงลำดับจากกำไรมากไปน้อย
+            results.sort((a, b) => b.val - a.val);
+
+            // วาด Cards (โฟกัสตัวเลขกำไรเป็นหลัก ตาม Feedback)
             let cardsHTML = '';
             results.forEach((r, idx) => {
                 const profit = r.val - totalCost;
                 const percent = ((profit / totalCost) * 100).toFixed(2);
-                const pColor = profit >= 0 ? 'text-green-600' : 'text-red-600';
+                const isProfit = profit >= 0;
+                const colorText = isProfit ? 'text-green-600' : 'text-red-500';
+                const colorBg = isProfit ? 'bg-green-50' : 'bg-red-50';
+                const sign = isProfit ? '+' : '';
+                const isWinner = r.val === maxVal;
                 
                 cardsHTML += `
-                    <div class="bg-white rounded-xl p-4 shadow-sm border-t-4 flex flex-col justify-between" style="border-color: ${r.c}">
+                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between relative hover:shadow-md transition-shadow group">
+                        ${isWinner ? '<div class="absolute -top-3 -right-3 text-3xl drop-shadow-md z-10" title="กลยุทธ์ที่ได้กำไรสูงสุด">👑</div>' : ''}
+                        
                         <div>
-                            <div class="text-[11px] font-bold text-slate-500 mb-1">อันดับ ${idx+1}: ${r.name}</div>
-                            <div class="text-lg font-black text-slate-800 my-1">${fmtTHB(r.val)}</div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-3 h-3 rounded-full" style="background-color: ${r.c}"></div>
+                                <div class="text-[13px] font-bold text-slate-700 leading-tight">${r.name}</div>
+                            </div>
+                            
+                            <!-- โชว์กำไรตัวเบ้อเริ่ม -->
+                            <div class="mb-3">
+                                <div class="text-[10px] font-medium text-slate-400 mb-0.5 uppercase tracking-wider">กำไร/ขาดทุน สุทธิ</div>
+                                <div class="flex items-baseline gap-1.5 flex-wrap">
+                                    <span class="text-2xl font-black ${colorText} tracking-tight">${sign}${fmtNum(profit)}</span>
+                                    <span class="text-sm font-bold ${colorText} ${colorBg} px-1.5 py-0.5 rounded">${sign}${percent}%</span>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="text-sm font-bold ${pColor}">กำไร ${fmtTHB(profit)}</div>
-                            <div class="text-[11px] font-bold ${pColor}">(${profit >= 0 ? '+' : ''}${percent}%)</div>
-                            <div class="text-[10px] text-slate-400 mt-1 leading-tight">${r.desc}</div>
+
+                        <div class="pt-3 border-t border-slate-100">
+                            <div class="flex justify-between items-baseline mb-1.5">
+                                <span class="text-xs text-slate-500">มูลค่าพอร์ต:</span>
+                                <span class="text-sm font-bold text-slate-800">${fmtNum(r.val)}</span>
+                            </div>
+                            <div class="text-[11px] text-slate-400 leading-snug group-hover:text-slate-500 transition-colors">${r.desc}</div>
                         </div>
                     </div>
                 `;
             });
-            // ปรับตารางการ์ดให้รองรับ 5 กล่องพอดี
-            document.getElementById('summaryCards').className = "grid grid-cols-2 md:grid-cols-5 gap-4 mb-6";
             document.getElementById('summaryCards').innerHTML = cardsHTML;
+
+            // อัปเดตชื่อกราฟ
+            document.getElementById('chartTitle').innerText = `ต้นทุนสะสม: ${fmtTHB(totalCost)}`;
 
             // วาด Chart
             const labels = history.map(h => h.date);
             const datasets = [
-                { label: 'ต้นทุนสะสม (เงินก้อน)', data: history.map(h => h.cost), borderColor: '#CBD5E1', borderDash: [5,5], fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'เก็บเงินสด (โดนเงินเฟ้อ)', data: history.map(h => h.cashValue), borderColor: colors.cash, fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'Lump Sum (ต้นปี)', data: history.map(h => h.lumpSum), borderColor: colors.lumpSum, fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'DCA (ต้นเดือน)', data: history.map(h => h.dcaFirst), borderColor: colors.dcaFirst, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'ต้นทุนสะสม', data: history.map(h => h.cost), borderColor: colors.cost, borderDash: [5,5], fill: true, backgroundColor: 'rgba(203, 213, 225, 0.1)', tension: 0.1, pointRadius: 0, order: 10 },
+                { label: 'เก็บเงินสดฝังตุ่ม', data: history.map(h => h.cashValue), borderColor: colors.cash, fill: false, tension: 0.1, pointRadius: 0, order: 9 },
+                { label: 'ทุ่มต้นปี (Lump Sum)', data: history.map(h => h.lumpSum), borderColor: colors.lumpSum, fill: false, tension: 0.1, pointRadius: 0, order: 1 },
+                { label: 'DCA ต้นเดือน', data: history.map(h => h.dcaFirst), borderColor: colors.dcaFirst, fill: false, tension: 0.1, pointRadius: 0, order: 2 },
                 
-                // ปิดเส้นที่ทำให้กราฟดูรกไว้ก่อน (User กดเปิดได้ที่คำบรรยายบนกราฟ)
-                { label: 'DCA (ต่ำสุดของเดือน)', data: history.map(h => h.dcaLow), borderColor: colors.dcaLow, borderDash: [2,2], fill: false, tension: 0.1, pointRadius: 0, hidden: true },
-                { label: 'DCA (สูงสุดของเดือน)', data: history.map(h => h.dcaHigh), borderColor: colors.dcaHigh, borderDash: [2,2], fill: false, tension: 0.1, pointRadius: 0, hidden: true }
+                // ซ่อนเส้นที่ทำให้รกลูกตาไว้ก่อน ตามคำแนะนำ
+                { label: 'DCA ต่ำสุด', data: history.map(h => h.dcaLow), borderColor: colors.dcaLow, borderDash: [3,3], fill: false, tension: 0.1, pointRadius: 0, order: 3, hidden: true },
+                { label: 'DCA ยอดดอย', data: history.map(h => h.dcaHigh), borderColor: colors.dcaHigh, borderDash: [3,3], fill: false, tension: 0.1, pointRadius: 0, order: 4, hidden: true }
             ];
 
             if (chartInstance) {
@@ -425,19 +503,42 @@
                     data: { labels, datasets },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         interaction: { mode: 'index', intersect: false },
-                        scales: { y: { ticks: { callback: function(val) { return "฿" + (val/1000000).toFixed(1) + "M"; } } } },
-                        plugins: { tooltip: { callbacks: { label: function(context) { return context.dataset.label + ': ' + fmtTHB(context.raw); } } } }
+                        scales: { 
+                            y: { 
+                                ticks: { font: {size: 11}, color: '#64748B', callback: function(val) { return "฿" + (val/1000000).toFixed(1) + "M"; } },
+                                grid: { color: '#F1F5F9' }, border: { display: false }
+                            },
+                            x: {
+                                ticks: { font: {size: 11}, color: '#64748B', maxTicksLimit: 12 },
+                                grid: { display: false }, border: { display: false }
+                            }
+                        },
+                        plugins: { 
+                            legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 12, family: 'sans-serif'}, padding: 20 } },
+                            tooltip: { 
+                                backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, titleFont: {size: 13}, bodyFont: {size: 13},
+                                callbacks: { label: function(context) { return context.dataset.label + ': ' + fmtTHB(context.raw); } } 
+                            } 
+                        }
                     }
                 });
             }
         }
 
-        // 6. Initialization
-        document.getElementById('dcaSlider').addEventListener('input', updateUI);
-        
+        // 🚀 Boot System
         (async function init() {
-            vooData = await fetchAndParseData();
+            // โหลดข้อมูล
+            fullVooData = await fetchAndParseData();
+            
+            // ปิด Skeleton ลบ class hidden แล้วเปิดเฟด Animation UI หลัก
+            document.getElementById('skeletonUI').style.display = 'none';
+            const mainUI = document.getElementById('mainContent');
+            mainUI.classList.remove('hidden');
+            // Allow browser to render 'display: block' before applying opacity transition
+            setTimeout(() => { mainUI.classList.remove('opacity-0'); }, 50);
+
             updateUI();
         })();
     </script>

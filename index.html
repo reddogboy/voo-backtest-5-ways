@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุน</title>
+    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุน 10 ปี</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F8FAFC; }
         
-        /* Loading Skeleton Animation */
+        /* Skeleton Animation */
         @keyframes shimmer {
             0% { background-position: -1000px 0; }
             100% { background-position: 1000px 0; }
@@ -20,7 +20,7 @@
             background-size: 1000px 100%;
         }
         
-        /* เอาลูกศรขึ้น/ลงในช่องกรอกตัวเลขออก (Chrome/Safari) */
+        /* ซ่อนลูกศรขึ้น/ลงในช่องกรอกตัวเลข */
         input[type="text"] { font-variant-numeric: tabular-nums; }
         
         /* Winner Card Animation */
@@ -111,7 +111,6 @@
             </div>
 
             <!-- Summary Cards (Grid แนวนอนกะทัดรัดบนมือถือ) -->
-            <!-- สังเกตคลาส grid-cols-2 คือบนมือถือจะแบ่ง 2 ซีก ทำให้ดูกระชับขึ้นมาก -->
             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6" id="summaryCards"></div>
 
             <!-- Chart -->
@@ -122,8 +121,8 @@
                 <div class="text-[10px] sm:text-xs text-slate-400 mb-4 flex items-center gap-1">
                     <span>💡</span> แตะที่ชื่อกราฟด้านล่างเพื่อ ซ่อน/แสดง เส้นกราฟ
                 </div>
-                <!-- 🌟 ล็อกความสูงเพื่อป้องกันกราฟเพี้ยน/ยืด -->
-                <div class="relative w-full h-[250px] md:h-[350px]">
+                <!-- 🌟 ล็อกความสูงเพื่อป้องกันกราฟเพี้ยน/ยืด (เผื่อที่ให้ Legend ด้วย) -->
+                <div class="relative w-full h-[320px] md:h-[400px]">
                     <canvas id="myChart"></canvas>
                 </div>
             </div>
@@ -132,7 +131,7 @@
             <div class="text-center bg-indigo-50 border border-indigo-100 rounded-xl p-4 transition hover:bg-indigo-100 shadow-sm mb-4">
                 <a href="https://reddogboy.github.io/lottery-kitchenruay-website/" target="_blank" rel="noopener noreferrer" class="block">
                     <div class="text-indigo-800 font-bold text-sm md:text-base">👾 ลองเล่นโปรแกรมจำลองและคำนวณอย่างอื่นได้ที่นี่</div>
-                    <div class="text-indigo-500 text-xs md:text-sm mt-1">คลิกเพื่อเปิด 👉🏻 https://reddogboy.github.io/lottery-kitchenruay-website/</div>
+                    <div class="text-indigo-500 text-xs md:text-sm mt-1">คลิกเพื่อเปิด 👉🏻 KitchenRuay Lottery Simulator</div>
                 </a>
             </div>
 
@@ -165,18 +164,28 @@
         
         // 2. Constants & Settings
         const INFLATION_RATE = 0.03; // เงินเฟ้อ 3% ต่อปี
+        
+        // อัปเดตสีตามที่ขอ: เงินสด=เทาเข้ม(ดำ), ต้นทุน=เทาอ่อน
         const C = { 
             lumpSum: '#3B82F6',   // น้ำเงิน
             dcaLow: '#10B981',    // เขียว
             dcaFirst: '#EAB308',  // เหลือง
             dcaHigh: '#EF4444',   // แดง
-            cash: '#94A3B8'       // เทา
+            cash: '#475569',      // เทาเข้ม/ดำ (เก็บเงินสดไว้เฉยๆ)
+            cost: '#CBD5E1'       // เทาอ่อน (ต้นทุนสะสม)
         };
 
         // 3. Formatters
         const fmtNum = (n) => Math.round(n).toLocaleString("en-US");
         const fmtTHB = (n) => "฿" + fmtNum(n);
         const fmtSign = (n) => (n > 0 ? "+" : "") + fmtNum(n);
+        
+        // Formatter สำหรับแปลงตัวเลขในกราฟให้เป็น K หรือ M
+        const compactNum = (val) => {
+            if (val >= 1000000) return (val / 1000000).toFixed(2) + "M";
+            if (val >= 1000) return (val / 1000).toFixed(2) + "K";
+            return Math.round(val).toLocaleString();
+        };
 
         // 4. การจัดการ Input (ใส่ลูกน้ำอัตโนมัติ)
         const inputEl = document.getElementById('monthlyInput');
@@ -197,7 +206,7 @@
         function clearInput() {
             inputEl.value = '0';
             updateUI();
-            inputEl.focus(); // ให้ Cursor กลับไปกะพริบรอพิมพ์ต่อ
+            inputEl.focus();
         }
 
         function getMonthlyDCA() {
@@ -208,7 +217,7 @@
         function initYearModal() {
             const grid = document.getElementById('modalYearGrid');
             const currentYear = new Date().getFullYear();
-            const maxYear = currentYear - 1; // ล็อกให้เลือกได้ถึงแค่ปีก่อนหน้า
+            const maxYear = currentYear - 1; 
             
             let html = '';
             for (let y = 2015; y <= maxYear; y++) {
@@ -253,7 +262,7 @@
             updateUI();
         }
 
-        // 6. ดึงข้อมูลจากไฟล์ JSON ที่ GitHub Actions สร้างไว้
+        // 6. ดึงข้อมูลจากไฟล์ JSON
         async function fetchJSONData() {
             try {
                 const response = await fetch(`./voo_data.json?t=${new Date().getTime()}`); 
@@ -261,7 +270,7 @@
                 
                 const data = await response.json();
                 
-                // บังคับเรียงวันที่ให้เป๊ะ (แกน X จะได้ไม่เพี้ยน)
+                // บังคับเรียงวันที่ให้เป๊ะ
                 globalVooData = data.sort((a, b) => a.date.localeCompare(b.date));
                 
                 document.getElementById('stateContainer').style.display = 'none';
@@ -322,7 +331,7 @@
             return { history, totalCost: pFirst.cost };
         }
 
-        // 8. การวาด UI แบบกะทัดรัด (Compact Mobile View)
+        // 8. การวาด UI (ปรับฟอนต์ให้อ่านง่ายขึ้น)
         function updateUI() {
             if (globalVooData.length === 0) return;
             
@@ -335,11 +344,11 @@
             document.getElementById('chartTitle').innerText = `ต้นทุนสะสม: ${fmtTHB(totalCost)}`;
 
             let results = [
-                { id: 'lumpSum', name: "ทุ่มก้อนเดียวตั้งแต่ต้นปี 💥", val: last.lumpSum, c: C.lumpSum, desc: "ก้อนใหญ่ครั้งเดียวในวันแรกของแต่ละปี" },
-                { id: 'dcaLow', name: "ซื้อถูกสุด 🤩", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะซื้อที่จุดถูกสุดของเดือน" },
-                { id: 'dcaFirst', name: "DCA ปกติ 🌱", val: last.dcaFirst, c: C.dcaFirst, desc: "หักบัญชีทุกวันที่ 1 ของแต่ละเดือน" },
-                { id: 'dcaHigh', name: "ซื้อยอดดอย 🏔️", val: last.dcaHigh, c: C.dcaHigh, desc: "ซวยจัด ซื้อที่ราคาแพงสุดของเดือน" },
-                { id: 'cash', name: "เก็บเงินสด 💸", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุน โดนเงินเฟ้อกิน" }
+                { id: 'lumpSum', name: "ทุ่มก้อนเดียวต้นปี", val: last.lumpSum, c: C.lumpSum, desc: "ก้อนใหญ่รอบเดียวใน ม.ค." },
+                { id: 'dcaLow', name: "ซื้อถูกสุดทุกเดือน", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะซื้อตอนถูกที่สุด" },
+                { id: 'dcaFirst', name: "DCA ต้นเดือน", val: last.dcaFirst, c: C.dcaFirst, desc: "หลับตาหักบัญชีตอนต้นเดือน" },
+                { id: 'dcaHigh', name: "ซื้อแพงสุดทุกเดือน", val: last.dcaHigh, c: C.dcaHigh, desc: "ซวยจัด ซื้อตอนแพงที่สุด" },
+                { id: 'cash', name: "เก็บเงินสดไว้เฉย ๆ", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุน โดนเงินเฟ้อกิน" }
             ];
 
             results.sort((a, b) => b.val - a.val);
@@ -353,35 +362,34 @@
                 const isLoss = profit < 0;
                 const profitColor = isLoss ? 'text-red-600' : 'text-green-600';
                 
-                // 🌟 Logic การแบ่งคอลัมน์บนมือถือ: ผู้ชนะจะกางเต็มพื้นที่ (col-span-2) คนอื่นจะอยู่ครึ่งจอ (col-span-1)
                 const gridSpan = isWinner ? 'col-span-2 md:col-span-1' : 'col-span-1 md:col-span-1';
                 
-                // ปรับขนาดตัวหนังสือให้พอดีกับกรอบเล็กๆ บนมือถือ
-                const titleSize = isWinner ? 'text-sm' : 'text-[11px]';
-                const profitSize = isWinner ? 'text-2xl' : 'text-lg';
+                // 🌟 ขยายขนาดตัวหนังสือให้อ่านง่ายขึ้นบนมือถือ
+                const titleSize = isWinner ? 'text-base' : 'text-xs';
+                const profitSize = isWinner ? 'text-3xl' : 'text-xl';
 
                 cardsHTML += `
-                    <div class="${gridSpan} bg-white rounded-xl p-3 relative flex flex-col justify-between ${isWinner ? 'winner-card' : 'border border-slate-100 shadow-sm'}">
+                    <div class="${gridSpan} bg-white rounded-xl p-3 sm:p-4 relative flex flex-col justify-between ${isWinner ? 'winner-card' : 'border border-slate-100 shadow-sm'}">
                         ${isWinner ? '<div class="absolute -top-3 -right-2 text-2xl drop-shadow-md z-10" title="ผู้ชนะเลิศ">👑</div>' : ''}
                         
                         <div>
                             <div class="flex items-center gap-1.5 mb-1.5">
-                                <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${r.c}"></div>
+                                <div class="w-3 h-3 rounded-full flex-shrink-0 shadow-sm" style="background-color: ${r.c}"></div>
                                 <div class="${titleSize} font-bold text-slate-700 leading-tight truncate">${r.name}</div>
                             </div>
                             
-                            <div class="text-[9px] text-slate-400 mb-0.5 font-semibold uppercase tracking-wider">${isWinner ? 'กำไร/ขาดทุน สุทธิ' : 'กำไร/ขาดทุน'}</div>
+                            <div class="text-[10px] text-slate-400 mb-0.5 font-semibold uppercase tracking-wider">${isWinner ? 'กำไร/ขาดทุน สุทธิ' : 'กำไร/ขาดทุน'}</div>
                             <div class="${profitSize} font-black ${profitColor} mb-1 tracking-tight truncate">
                                 ${fmtSign(profit)}
                             </div>
-                            <div class="inline-block px-1.5 py-0.5 rounded ${isLoss ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'} text-[10px] font-bold mb-2">
+                            <div class="inline-block px-1.5 py-0.5 rounded ${isLoss ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'} text-[11px] font-bold mb-2">
                                 ${percent > 0 ? '+' : ''}${percent.toFixed(2)}%
                             </div>
                         </div>
 
                         <div class="pt-2 border-t border-slate-50">
-                            <div class="text-[10px] text-slate-500">พอร์ต: <span class="font-bold text-slate-800 text-xs">${fmtNum(r.val)}</span></div>
-                            <div class="text-[9px] text-slate-400 mt-0.5 leading-snug truncate">(${r.desc})</div>
+                            <div class="text-[11px] text-slate-500">พอร์ต: <span class="font-bold text-slate-800 text-sm">${fmtNum(r.val)}</span></div>
+                            <div class="text-[10px] text-slate-400 mt-0.5 leading-snug truncate">(${r.desc})</div>
                         </div>
                     </div>
                 `;
@@ -393,10 +401,10 @@
             const datasets = [
                 { label: 'ทุ่มก้อนเดียวต้นปี', data: history.map(h => h.lumpSum), borderColor: C.lumpSum, fill: false, tension: 0.1, pointRadius: 0 },
                 { label: 'ซื้อถูกสุดทุกเดือน', data: history.map(h => h.dcaLow), borderColor: C.dcaLow, fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'DCA ต้นเดือนปกติ', data: history.map(h => h.dcaFirst), borderColor: C.dcaFirst, fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'ซื้อยอดดอยทุกเดือน', data: history.map(h => h.dcaHigh), borderColor: C.dcaHigh, fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'เก็บเงินสดฝังตุ่ม', data: history.map(h => h.cashValue), borderColor: C.cash, fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'ต้นทุนสะสม', data: history.map(h => h.cost), borderColor: '#CBD5E1', borderDash: [4,4], fill: false, tension: 0, pointRadius: 0 }
+                { label: 'DCA ต้นเดือน', data: history.map(h => h.dcaFirst), borderColor: C.dcaFirst, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'ซื้อแพงสุดทุกเดือน', data: history.map(h => h.dcaHigh), borderColor: C.dcaHigh, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'เก็บเงินสดไว้เฉย ๆ', data: history.map(h => h.cashValue), borderColor: C.cash, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'ต้นทุนสะสม', data: history.map(h => h.cost), borderColor: C.cost, borderDash: [4,4], fill: false, tension: 0, pointRadius: 0, borderWidth: 2 }
             ];
 
             if (chartInstance) {
@@ -405,20 +413,23 @@
                 chartInstance.update();
             } else {
                 const ctx = document.getElementById('myChart').getContext('2d');
+                
+                // 🌟 ตั้งค่า Default ฟอนต์ของกราฟให้อ่านง่าย
+                Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+                
                 chartInstance = new Chart(ctx, {
                     type: 'line',
                     data: { labels, datasets },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false, // 🌟 ปลดล็อกให้ Chart ไม่บิดเบี้ยว ยืดตาม Div แม่
+                        maintainAspectRatio: false, 
                         interaction: { mode: 'index', intersect: false },
                         scales: { 
                             y: { 
                                 ticks: { 
+                                    font: { size: 10 },
                                     callback: function(val) { 
-                                        if (val >= 1000000) return "฿" + (val/1000000).toFixed(1) + "M"; 
-                                        if (val >= 10000) return "฿" + (val/1000).toFixed(0) + "k";
-                                        return "฿" + val.toLocaleString();
+                                        return compactNum(val); // ใช้ฟังก์ชันย่อตัวเลข
                                     } 
                                 },
                                 grid: { color: '#F1F5F9' },
@@ -427,24 +438,33 @@
                             x: {
                                 grid: { display: false },
                                 border: { display: false },
-                                ticks: { color: '#94A3B8', maxTicksLimit: 6 } // ลดจำนวนป้ายแกน x บนมือถือ
+                                ticks: { color: '#94A3B8', maxTicksLimit: 6, font: { size: 10 } }
                             }
                         },
                         plugins: { 
                             tooltip: { 
+                                backgroundColor: 'rgba(15, 23, 42, 0.95)', // สีพื้นหลัง Tooltip
+                                titleFont: { size: 13, weight: 'bold' },
+                                bodyFont: { size: 12 },
+                                padding: 12,
+                                cornerRadius: 8,
+                                boxPadding: 6, // ห่างระหว่างวงกลมกับข้อความใน tooltip
                                 callbacks: { 
                                     label: function(context) { 
-                                        return context.dataset.label + ': ' + fmtTHB(context.raw); 
+                                        // 🌟 ใช้ Custom Formatter ย่อตัวเลขให้คลีน (เช่น 2.51M)
+                                        return context.dataset.label + ': ฿' + compactNum(context.raw); 
                                     } 
-                                },
-                                backgroundColor: '#1E293B',
-                                titleFont: { size: 12 },
-                                bodyFont: { size: 11 },
-                                padding: 10,
-                                cornerRadius: 8
+                                }
                             },
                             legend: {
-                                labels: { boxWidth: 10, usePointStyle: true, font: { size: 10 } }
+                                position: 'bottom', // ย้ายลงมาข้างล่าง
+                                labels: { 
+                                    boxWidth: 12, 
+                                    usePointStyle: true, // ทำให้เป็นวงกลม 🔵
+                                    padding: 16, // 🌟 ถ่างระยะห่างระหว่างป้ายให้ไม่ติดกัน
+                                    font: { size: 11, weight: '500' },
+                                    color: '#475569'
+                                }
                             }
                         }
                     }

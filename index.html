@@ -2,9 +2,8 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <!-- 🌟 แก้ปัญหา Auto-Zoom ด้วยการล็อค user-scalable=0 อย่างเด็ดขาด -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุนระยะยาว</title>
+    <title>S&P 500 (VOO) DCA Backtest | พิสูจน์กลยุทธ์การลงทุนระยะยาว</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -108,11 +107,9 @@
                     <div class="flex flex-col justify-center">
                         <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">📅 ปีที่เริ่มลงทุน (ถึงปัจจุบัน)</label>
                         <div class="relative w-full">
-                            <!-- เปลี่ยนจาก Button เป็น Select เพื่อเรียก Wheel ของมือถือ -->
                             <select id="yearSelect" onchange="changeYear(this.value)" class="w-full bg-slate-800 hover:bg-slate-900 text-yellow-300 font-black px-5 py-4 rounded-lg transition-all shadow-sm text-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 text-[16px] md:text-xl">
                                 <!-- Options จะถูกสร้างด้วย JavaScript -->
                             </select>
-                            <!-- ไอคอนลูกศรชี้ลง -->
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
                                 <span class="text-xs">▼</span>
                             </div>
@@ -122,13 +119,18 @@
                 </div>
             </div>
 
+            <!-- 🌟 NEW: กล่อง Insight สรุปผลลัพธ์แบบเล่าเรื่อง (เติมเต็มพื้นที่ว่างอย่างเกิดประโยชน์) -->
+            <div id="insightBox" class="hidden bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 md:p-5 mb-5 shadow-sm text-slate-700 transition-all duration-500">
+                <!-- เนื้อหาจะถูกแทรกด้วย JavaScript -->
+            </div>
+
             <!-- Summary Cards (Grid แนวนอนกะทัดรัดบนมือถือ) -->
             <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6" id="summaryCards"></div>
 
             <!-- Chart -->
             <div class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-100 mb-6">
                 <div class="flex justify-between items-end mb-2">
-                    <h2 class="text-sm md:text-base font-bold text-slate-700" id="chartTitle">ต้นทุนสะสม: ฿0</h2>
+                    <h2 class="text-sm md:text-base font-bold text-slate-700">📈 กราฟเปรียบเทียบการเติบโตของพอร์ต</h2>
                 </div>
                 <div class="text-[10px] sm:text-xs text-slate-400 mb-4 flex items-center gap-1">
                     <span>💡</span> แตะที่ชื่อกราฟด้านล่างเพื่อ ซ่อน/แสดง เส้นกราฟ
@@ -146,7 +148,7 @@
                 </a>
             </div>
 
-            <!-- 🌟 Disclaimer (คำเตือน) -->
+            <!-- Disclaimer (คำเตือน) -->
             <div class="text-center border-t border-slate-200 pt-6 pb-2 px-2">
                 <p class="text-[10px] sm:text-xs text-slate-400 leading-relaxed font-medium">
                     <strong class="text-slate-500">คำเตือน:</strong> ไม่ใช่คำแนะนำในการลงทุน การลงทุนมีความเสี่ยง ผู้ลงทุนควรศึกษาข้อมูลก่อนตัดสินใจลงทุน<br class="hidden md:block"> 
@@ -181,7 +183,6 @@
         const fmtTHB = (n) => "฿" + fmtNum(n);
         const fmtSign = (n) => (n > 0 ? "+" : "") + fmtNum(n);
         
-        // Formatter สำหรับแปลงตัวเลขในกราฟให้เป็น K หรือ M
         const compactNum = (val) => {
             if (val >= 1000000) return (val / 1000000).toFixed(2) + "M";
             if (val >= 1000) return (val / 1000).toFixed(2) + "K";
@@ -203,7 +204,6 @@
             updateUI();
         }
 
-        // ฟังก์ชันล้างค่า (Clear Input)
         function clearInput() {
             inputEl.value = '0';
             updateUI();
@@ -214,14 +214,13 @@
             return parseInt(inputEl.value.replace(/,/g, '')) || 0;
         }
 
-        // 5. 🌟 ระบบเลือกปีแบบล้อเลื่อน (Wheel Select)
+        // 5. ระบบเลือกปีแบบล้อเลื่อน (Wheel Select)
         function initYearSelect() {
             const selectEl = document.getElementById('yearSelect');
             const currentYear = new Date().getFullYear();
-            const maxYear = currentYear - 1; // ล็อกให้ถึงปีก่อนปัจจุบัน
+            const maxYear = currentYear - 1; 
             
             let html = '';
-            // ลูปสร้าง <option> ตั้งแต่ 2015 ถึง ปีก่อนหน้า
             for (let y = 2015; y <= maxYear; y++) {
                 const isSelected = y.toString() === selectedYear ? 'selected' : '';
                 html += `<option value="${y}" ${isSelected}>เริ่มตั้งแต่ปี ${y}</option>`;
@@ -231,7 +230,7 @@
 
         function changeYear(year) {
             selectedYear = year;
-            updateUI(); // เมื่อผู้ใช้หมุนวงล้อเสร็จ ให้อัปเดตกราฟทันที
+            updateUI(); 
         }
 
         // 6. ดึงข้อมูลจากไฟล์ JSON
@@ -241,14 +240,12 @@
                 if (!response.ok) throw new Error("JSON fetch failed");
                 
                 const data = await response.json();
-                
-                // บังคับเรียงวันที่ให้เป๊ะ
                 globalVooData = data.sort((a, b) => a.date.localeCompare(b.date));
                 
                 document.getElementById('stateContainer').style.display = 'none';
                 document.getElementById('mainContent').classList.remove('hidden');
                 
-                initYearSelect(); // เรียกสร้าง Wheel
+                initYearSelect(); 
                 updateUI();
             } catch (error) {
                 console.error("Fetch Data Error:", error);
@@ -303,7 +300,7 @@
             return { history, totalCost: pFirst.cost };
         }
 
-        // ฟังก์ชันสร้าง Custom HTML Tooltip (มีปุ่ม ✖)
+        // Custom HTML Tooltip
         const getOrCreateTooltip = (chart) => {
             let tooltipEl = chart.canvas.parentNode.querySelector('#custom-tooltip');
             if (!tooltipEl) {
@@ -313,7 +310,7 @@
                 tooltipEl.style.borderRadius = '12px';
                 tooltipEl.style.color = 'white';
                 tooltipEl.style.opacity = 1;
-                tooltipEl.style.pointerEvents = 'auto'; // ให้คลิกปุ่ม ✖ ในกล่องได้
+                tooltipEl.style.pointerEvents = 'auto'; 
                 tooltipEl.style.position = 'absolute';
                 tooltipEl.style.transition = 'all 0.2s ease';
                 tooltipEl.style.zIndex = 100;
@@ -371,7 +368,6 @@
             }
 
             const {offsetLeft: positionX, offsetTop: positionY} = chart.canvas;
-
             tooltipEl.style.opacity = 1;
             tooltipEl.style.pointerEvents = 'auto';
 
@@ -402,8 +398,7 @@
             if (history.length === 0) return;
             const last = history[history.length - 1];
 
-            document.getElementById('chartTitle').innerText = `ต้นทุนสะสม: ${fmtTHB(totalCost)}`;
-
+            // สร้าง Array เพื่อทำการ Sort
             let results = [
                 { id: 'lumpSum', name: "Lump Sum 💥", val: last.lumpSum, c: C.lumpSum, desc: "ทุ่มก้อนใหญ่ซื้อทีเดียวทุกต้นปี" },
                 { id: 'dcaLow', name: "Buy Low 🤩", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะ ซื้อตอนถูกที่สุดทุกเดือน" },
@@ -413,7 +408,36 @@
             ];
 
             results.sort((a, b) => b.val - a.val);
+            const winner = results[0];
+            const cashResult = results.find(r => r.id === 'cash');
+            const diffFromCash = winner.val - cashResult.val;
+            const currentYear = new Date().getFullYear();
+            const yearsDiff = currentYear - parseInt(selectedYear);
 
+            // 🌟 สร้าง Narrative Insight (สรุปผลแบบเล่าเรื่อง เพื่ออุดช่องว่างอย่างมีประโยชน์)
+            const insightBox = document.getElementById('insightBox');
+            if(totalCost > 0) {
+                insightBox.innerHTML = `
+                    <div class="flex items-start gap-3 md:gap-4">
+                        <div class="text-3xl md:text-4xl mt-1 drop-shadow-sm">💡</div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-indigo-900 text-sm md:text-lg mb-1">สรุปผลลัพธ์การลงทุน (ระยะเวลา ${yearsDiff} ปี)</h3>
+                            <p class="text-[11px] sm:text-sm text-slate-600 leading-relaxed mb-2">
+                                ด้วยเงินลงทุนสะสมทั้งหมด <strong class="text-slate-800">฿${fmtNum(totalCost)}</strong> กลยุทธ์ที่ให้ผลตอบแทนดีที่สุดคือ <strong class="text-indigo-700 bg-indigo-100 px-1.5 py-0.5 rounded">${winner.name}</strong> 
+                                ซึ่งสร้างมูลค่าพอร์ตได้ถึง <strong class="text-green-600 text-sm sm:text-base">฿${fmtNum(winner.val)}</strong>
+                            </p>
+                            <p class="text-[10px] sm:text-xs text-slate-500 bg-white/60 p-2 rounded-lg border border-slate-100">
+                                ⚖️ หากเทียบกับการเก็บเงินสดไว้เฉยๆ กลยุทธ์ผู้ชนะช่วยให้คุณมีความมั่งคั่งเพิ่มขึ้นถึง <strong class="text-green-600 font-black">฿${fmtNum(diffFromCash)}</strong>
+                            </p>
+                        </div>
+                    </div>
+                `;
+                insightBox.classList.remove('hidden');
+            } else {
+                insightBox.classList.add('hidden');
+            }
+
+            // วาด Cards
             let cardsHTML = '';
             results.forEach((r, idx) => {
                 const profit = r.val - totalCost;
@@ -424,7 +448,6 @@
                 const profitColor = isLoss ? 'text-red-600' : 'text-green-600';
                 
                 const gridSpan = isWinner ? 'col-span-2 md:col-span-1' : 'col-span-1 md:col-span-1';
-                
                 const titleSize = isWinner ? 'text-base' : 'text-xs';
                 const profitSize = isWinner ? 'text-3xl' : 'text-xl';
 

@@ -4,69 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุน</title>
-    <!-- โหลด Tailwind CSS ผ่าน CDN สำหรับตกแต่ง -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- โหลด Chart.js ผ่าน CDN สำหรับวาดกราฟ -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F8FAFC; }
-        /* ซ่อนลูกศรขึ้นลงใน input type number */
-        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        /* ซ่อน Scrollbar แต่ยังเลื่อนได้ สำหรับปุ่มปี */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="p-4 md:p-6 text-slate-800">
 
     <div class="max-w-6xl mx-auto">
-        <!-- Header (แก้ Copywriting ตาม Feedback) -->
-        <div class="text-center mb-10 mt-4">
-            <h1 class="text-3xl md:text-4xl font-extrabold mb-3 text-slate-900 tracking-tight">VOO DCA Backtest 🇺🇸</h1>
-            <p class="text-slate-500 text-lg">กลยุทธ์ไหนสร้างกำไรได้ดีที่สุดในรอบ 10 ปี</p>
+        <!-- Header -->
+        <div class="text-center mb-8 mt-2">
+            <h1 class="text-3xl md:text-4xl font-black mb-3 text-slate-900 tracking-tight">VOO DCA Backtest 🇺🇸</h1>
+            <p class="text-slate-500 text-base md:text-lg font-medium">พิสูจน์ด้วยข้อมูลจริง กลยุทธ์ไหนสร้างกำไรได้ดีที่สุดในรอบ 10 ปี</p>
         </div>
 
-        <!-- ⏳ Skeleton UI (แสดงผลตอนโหลดข้อมูล) -->
+        <!-- ⏳ Skeleton UI (มีข้อความบอกสถานะ) -->
         <div id="skeletonUI" class="animate-pulse">
-            <div class="bg-white rounded-2xl p-6 shadow-sm mb-6 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 h-32">
-                <div class="h-10 bg-slate-200 rounded w-1/3"></div>
-                <div class="h-10 bg-slate-200 rounded w-1/4"></div>
+            <div class="flex justify-center items-center h-20 mb-6">
+                <div class="text-blue-600 font-bold flex items-center gap-2">
+                    <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    กำลังโหลดข้อมูลล่าสุดจากตลาดหุ้น...
+                </div>
             </div>
+            <div class="h-32 bg-slate-200 rounded-2xl mb-6"></div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                <div class="h-32 bg-slate-200 rounded-2xl"></div>
-                <div class="h-32 bg-slate-200 rounded-2xl"></div>
-                <div class="h-32 bg-slate-200 rounded-2xl"></div>
-                <div class="h-32 bg-slate-200 rounded-2xl"></div>
-                <div class="h-32 bg-slate-200 rounded-2xl"></div>
+                <div class="h-40 bg-slate-200 rounded-2xl"></div>
+                <div class="h-40 bg-slate-200 rounded-2xl"></div>
+                <div class="h-40 bg-slate-200 rounded-2xl"></div>
+                <div class="h-40 bg-slate-200 rounded-2xl"></div>
+                <div class="h-40 bg-slate-200 rounded-2xl"></div>
             </div>
             <div class="h-80 bg-slate-200 rounded-2xl"></div>
         </div>
 
-        <!-- 🟢 Main Content (ซ่อนไว้ก่อนจนกว่าข้อมูลจะพร้อม) -->
+        <!-- 🟢 Main Content -->
         <div id="mainContent" class="hidden opacity-0 transition-opacity duration-500">
             
-            <!-- Controller -->
-            <div class="bg-white rounded-2xl p-6 shadow-sm mb-6 flex flex-col md:flex-row gap-6 justify-between items-center border border-slate-100">
-                <!-- ก้อนที่ 1: Timeframe -->
-                <div class="w-full md:w-auto">
-                    <label class="block text-sm font-bold text-slate-600 mb-2">ปีที่เริ่มลงทุน (Start Year)</label>
-                    <select id="yearSelect" class="w-full md:w-48 bg-slate-50 border border-slate-200 text-slate-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 font-bold cursor-pointer transition-all">
-                        <option value="2015">2015 (ระยะยาว 10 ปี)</option>
-                        <option value="2019">2019 (ก่อนวิกฤตโควิด)</option>
-                        <option value="2020">2020 (ช่วงวิกฤตโควิด)</option>
-                        <option value="2022">2022 (ตลาดหมีรุนแรง)</option>
-                        <option value="2024">2024 (ล่าสุด)</option>
-                    </select>
-                </div>
-
-                <!-- ก้อนที่ 2: DCA Input + Slider -->
-                <div class="w-full md:flex-1 md:max-w-xl">
-                    <div class="flex justify-between items-end mb-2">
-                        <label class="block text-sm font-bold text-slate-600">เงินลงทุน (บาท/ปี)</label>
-                        <div class="relative">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 font-bold">฿</span>
-                            <input type="number" id="dcaInput" min="12000" max="1200000" step="12000" value="120000" class="bg-blue-50 border border-blue-200 text-blue-900 text-lg font-black rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-40 pl-8 p-1.5 text-right transition-all">
+            <!-- Controller: Input รายเดือน & ปุ่มแคปซูลปี -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm mb-6 border border-slate-100">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    
+                    <!-- ก้อนที่ 1: ใส่ยอดเงินรายเดือน + Quick Add -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-600 mb-2">เงินลงทุน (ต่อเดือน)</label>
+                        <div class="relative mb-3">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500 font-bold text-xl">฿</span>
+                            <!-- ใช้ inputmode numeric เพื่อให้คีย์บอร์ดมือถือขึ้นเป็นตัวเลข -->
+                            <input type="text" id="monthlyInput" inputmode="numeric" value="10,000" class="bg-blue-50 border border-blue-200 text-blue-900 text-2xl font-black rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-3 transition-all">
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="addMonthlyAmount(5000)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold rounded-lg transition-colors">+ 5K</button>
+                            <button onclick="addMonthlyAmount(10000)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold rounded-lg transition-colors">+ 10K</button>
+                            <button onclick="addMonthlyAmount(50000)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold rounded-lg transition-colors">+ 50K</button>
+                            <button onclick="clearMonthlyAmount()" class="px-3 py-1.5 text-slate-400 hover:text-red-500 text-sm font-bold rounded-lg transition-colors ml-auto">ล้าง</button>
                         </div>
                     </div>
-                    <input type="range" id="dcaSlider" min="12000" max="1200000" step="12000" value="120000" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600 mt-2">
-                    <div class="text-right text-xs text-slate-500 mt-2 font-medium" id="monthlyText">ลงทุนเดือนละ ฿10,000</div>
+
+                    <!-- ก้อนที่ 2: Timeframe (Pills) -->
+                    <div>
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="block text-sm font-bold text-slate-600">ปีที่เริ่มลงทุน (ถึงปัจจุบัน)</label>
+                            <span class="text-xs text-slate-400 font-medium" id="yearlySummaryText">ตกปีละ ฿120,000</span>
+                        </div>
+                        <div class="flex overflow-x-auto gap-2 pb-2 no-scrollbar" id="yearPillsContainer">
+                            <!-- ปุ่มแคปซูลจะถูกสร้างด้วย JS (2015-2025) -->
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-1">* เลื่อนซ้ายขวาเพื่อเลือกปีที่ต้องการเริ่มลงทุน</p>
+                    </div>
+
                 </div>
             </div>
 
@@ -77,10 +86,10 @@
 
             <!-- Chart -->
             <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-                <div class="flex justify-between items-end mb-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-2">
                     <div>
                         <h2 class="text-xl font-bold text-slate-800" id="chartTitle">การเติบโตของมูลค่าพอร์ต</h2>
-                        <p class="text-sm text-slate-500 mt-1">เปรียบเทียบกลยุทธ์ต่างๆ กับต้นทุนสะสม (คลิกที่ป้ายชื่อด้านล่างเพื่อเปิด/ปิดกราฟ)</p>
+                        <p class="text-sm text-slate-500 mt-1 font-medium">เปรียบเทียบกลยุทธ์ต่างๆ กับต้นทุนสะสม <span class="text-blue-500">(💡 แตะที่ชื่อกราฟด้านล่างเพื่อเปิด/ปิดเส้นกราฟ)</span></p>
                     </div>
                 </div>
                 <div class="relative h-[400px] w-full">
@@ -88,18 +97,21 @@
                 </div>
             </div>
 
-            <!-- Footer Warning -->
-            <div class="mt-8 text-center text-xs text-slate-400 max-w-3xl mx-auto leading-relaxed">
-                * ข้อมูลดึงสดจากตลาดหุ้นผ่าน Proxy API หาก API ขัดข้องระบบจะใช้ข้อมูลสำรองอัตโนมัติ<br>
-                * การประเมินเงินสดฝังตุ่ม อ้างอิงจากอัตราเงินเฟ้อเฉลี่ย 3% ต่อปี (ประมาณ 0.25% ต่อเดือน)<br>
-                * ผลการดำเนินงานในอดีต มิได้เป็นสิ่งยืนยันถึงผลการดำเนินงานในอนาคต โปรดศึกษาข้อมูลก่อนตัดสินใจลงทุน
+            <!-- Footer Warning (แสดงผลเงินเฟ้อให้ชัดขึ้น) -->
+            <div class="mt-8 bg-slate-100 rounded-xl p-5 text-xs text-slate-500 max-w-3xl mx-auto leading-relaxed border border-slate-200 shadow-inner">
+                <div class="font-bold text-slate-700 mb-1">📌 หมายเหตุสำคัญ:</div>
+                <ul class="list-disc pl-5 space-y-1">
+                    <li>ข้อมูลดึงสดจากตลาดหุ้น หาก API ขัดข้องระบบจะสลับใช้ข้อมูลสำรองอัตโนมัติเพื่อให้เว็บทำงานต่อได้</li>
+                    <li><strong class="text-slate-700">ภัยเงียบของเงินเฟ้อ:</strong> การประเมิน "เก็บเงินสด" อ้างอิงจากเงินเฟ้อเฉลี่ย 3% ต่อปี (ประมาณ 0.25% ต่อเดือน) มูลค่าที่แสดงคือ <u class="font-bold text-red-500">อำนาจซื้อที่ลดลงจริง</u></li>
+                    <li>ผลการดำเนินงานในอดีต มิได้เป็นสิ่งยืนยันถึงผลการดำเนินงานในอนาคต</li>
+                </ul>
             </div>
         </div>
     </div>
 
     <!-- Logic System -->
     <script>
-        // 💾 1. Fallback Data (ระบบสำรองข้อมูล อัปเดตล่าสุดถึง ต.ค. 2026)
+        // 💾 1. Fallback Data (เหมือนเดิม)
         const FALLBACK_CSV = `Date,Close/Last,Volume,Open,High,Low
 10/27/2026,707.52,5383510,705.40,708.81,703.375
 09/30/2026,700.86,9876125,704.58,707.20,700.56
@@ -244,7 +256,7 @@
 02/27/2015,193.05,2522770,193.33,193.59,192.74
 01/30/2015,182.93,3102421,185.03,185.50,182.72`;
 
-        // ระบบแปลงข้อมูล CSV (Fallback)
+        // Parse Fallback Data
         function parseFallbackCSV(csvString) {
             const lines = csvString.trim().split('\n');
             let monthly = {};
@@ -273,18 +285,18 @@
             return Object.values(monthly).sort((a, b) => a.date.localeCompare(b.date));
         }
 
-        // 🌐 2. Multi-Proxy API Fetcher (รับประกันการดึงข้อมูลสด)
+        // 🌐 2. Multi-Proxy API Fetcher
         async function fetchAndParseData() {
             const url = 'https://query1.finance.yahoo.com/v8/finance/chart/VOO?interval=1d&range=15y';
             const proxies = [
-                `https://corsproxy.io/?${encodeURIComponent(url)}`, // Proxy A: เร็ว เสถียร
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}` // Proxy B: สำรอง
+                `https://corsproxy.io/?${encodeURIComponent(url)}`,
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
             ];
 
             for (const proxy of proxies) {
                 try {
                     const response = await fetch(proxy, { cache: 'no-store' });
-                    if (!response.ok) continue; // ลองอันถัดไป
+                    if (!response.ok) continue;
                     const data = await response.json();
                     if (!data || !data.chart || !data.chart.result) continue;
 
@@ -322,44 +334,88 @@
                 }
             }
             
-            // ⚠️ ถ้า Proxy ทั้งหมดพัง ให้ใช้ Fallback Data
             console.log("⚠️ ใช้ข้อมูลสำรอง (Fallback Data)");
             return parseFallbackCSV(FALLBACK_CSV);
         }
 
+        // Global State
         let fullVooData = [];
         let chartInstance = null;
+        let selectedStartYear = 2015;
+        let currentMonthlyDca = 10000;
         
-        // State
-        const colors = { lumpSum: '#8B5CF6', dcaFirst: '#3B82F6', dcaLow: '#10B981', dcaHigh: '#EF4444', cash: '#64748B', cost: '#CBD5E1' };
+        // Colors mapping according to feedback
+        const colors = { 
+            lumpSum: '#2563EB', // น้ำเงิน
+            dcaLow: '#16A34A',  // เขียว
+            dcaFirst: '#EAB308',// เหลือง
+            dcaHigh: '#DC2626', // แดง
+            cash: '#6B7280',    // เทา
+            cost: '#94A3B8'     // เทาอ่อน
+        };
+        
         const fmtTHB = (n) => "฿" + Math.round(n).toLocaleString("th-TH");
         const fmtNum = (n) => Math.round(n).toLocaleString("th-TH");
 
-        // Two-way binding for Input & Slider
-        const dcaInput = document.getElementById('dcaInput');
-        const dcaSlider = document.getElementById('dcaSlider');
-        const yearSelect = document.getElementById('yearSelect');
+        // UI Elements
+        const monthlyInput = document.getElementById('monthlyInput');
+        const yearPillsContainer = document.getElementById('yearPillsContainer');
+        const yearlySummaryText = document.getElementById('yearlySummaryText');
 
-        function syncInputs(e) {
-            let val = parseInt(e.target.value);
-            if (val < 12000) val = 12000;
-            if (val > 1200000) val = 1200000;
+        // 3. Logic for Inputs (Auto Comma & Quick Add)
+        monthlyInput.addEventListener('input', function(e) {
+            // Remove all non-numeric characters
+            let rawValue = e.target.value.replace(/[^0-9]/g, '');
+            if(rawValue === '') rawValue = '0';
             
-            dcaInput.value = val;
-            dcaSlider.value = val;
+            currentMonthlyDca = parseInt(rawValue, 10);
+            
+            // Re-format with commas
+            e.target.value = currentMonthlyDca === 0 ? '' : currentMonthlyDca.toLocaleString('en-US');
+            
+            updateUI();
+        });
+
+        function addMonthlyAmount(amount) {
+            currentMonthlyDca += amount;
+            monthlyInput.value = currentMonthlyDca.toLocaleString('en-US');
             updateUI();
         }
 
-        dcaInput.addEventListener('change', syncInputs);
-        dcaSlider.addEventListener('input', syncInputs);
-        yearSelect.addEventListener('change', updateUI);
+        function clearMonthlyAmount() {
+            currentMonthlyDca = 0;
+            monthlyInput.value = '';
+            updateUI();
+        }
 
-        // 3. Core Engine (คำนวณตามปีที่เลือก)
-        function runBacktest(yearlyDca, startYear) {
-            // Filter ข้อมูลตาม Timeframe ที่เลือก
+        // 4. Logic for Year Pills Generation
+        function generateYearPills() {
+            let html = '';
+            for(let y = 2015; y <= 2025; y++) {
+                const isActive = y === selectedStartYear;
+                const baseClass = "px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap cursor-pointer transition-all border";
+                const activeClass = isActive ? "bg-slate-800 text-white border-slate-800 shadow-md transform scale-105" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50";
+                
+                let extraText = "";
+                if(y===2019) extraText = " (ก่อนโควิด)";
+                if(y===2020) extraText = " (โควิด)";
+                if(y===2022) extraText = " (ตลาดหมี)";
+
+                html += `<button onclick="setYear(${y})" class="${baseClass} ${activeClass}">${y}${extraText}</button>`;
+            }
+            yearPillsContainer.innerHTML = html;
+        }
+
+        function setYear(year) {
+            selectedStartYear = year;
+            generateYearPills();
+            updateUI();
+        }
+
+        // 5. Core Engine Backtest
+        function runBacktest(monthlyDca, startYear) {
             const filteredData = fullVooData.filter(d => d.year >= startYear);
-            
-            const monthlyDca = yearlyDca / 12;
+            const yearlyDca = monthlyDca * 12;
             const monthlyInflationRate = 0.03 / 12; // เงินเฟ้อ 3% ต่อปี
             
             let history = [];
@@ -369,20 +425,16 @@
             let pHigh = { shares: 0, cost: 0 };
             let pCash = { value: 0 }; 
             
-            // เช็คว่าเดือนแรกของชุดข้อมูลนี้คืออะไร เพื่อจำลองการซื้อก้อนใหญ่
             const firstDataIndex = filteredData.length > 0 ? 0 : -1;
 
             filteredData.forEach((d, index) => {
-                // เงินสดโดนเงินเฟ้อกัดกินทุกเดือน
                 pCash.value = (pCash.value * (1 - monthlyInflationRate)) + monthlyDca;
 
-                // Lump Sum: ทุ่มเงิน ณ ต้นปีที่เริ่ม (หรือก้อนแรกสุดของ timeframe) และต้นปีถัดๆ ไป
                 if (d.isFirstOfYear || index === firstDataIndex) {
                     pLump.shares += yearlyDca / d.open;
                     pLump.cost += yearlyDca;
                 }
                 
-                // DCA
                 pFirst.shares += monthlyDca / d.open;
                 pFirst.cost += monthlyDca;
 
@@ -406,90 +458,92 @@
             return { history, totalCost: pFirst.cost };
         }
 
-        // 4. UI Updater
+        // 6. UI Updater
         function updateUI() {
             if(fullVooData.length === 0) return;
 
-            const yearlyDca = Number(dcaInput.value);
-            const startYear = Number(yearSelect.value);
-            document.getElementById('monthlyText').innerText = `ลงทุนเดือนละ ${fmtTHB(yearlyDca/12)}`;
+            const yearlyDca = currentMonthlyDca * 12;
+            yearlySummaryText.innerText = `รวมลงทุนปีละ ${fmtTHB(yearlyDca)}`;
 
-            const { history, totalCost } = runBacktest(yearlyDca, startYear);
-            if(history.length === 0) return;
+            const { history, totalCost } = runBacktest(currentMonthlyDca, selectedStartYear);
+            if(history.length === 0) {
+                document.getElementById('summaryCards').innerHTML = '<div class="col-span-full text-center text-slate-500 py-10">ไม่มีข้อมูลในปีที่เลือก</div>';
+                return;
+            }
 
             const last = history[history.length - 1];
             
-            // คำนวณผู้ชนะ
-            const results = [
-                { id: 'low', name: "ซื้อต่ำสุดทุกเดือน", val: last.dcaLow, c: colors.dcaLow, desc: "สายจับจังหวะ ขั้นเทพ (ยากที่สุดในโลก)" },
-                { id: 'lump', name: "ทุ่มก้อนเดียวต้นปี", val: last.lumpSum, c: colors.lumpSum, desc: "สายเงินก้อนพร้อมตั้งแต่ ม.ค. ของทุกปี" },
-                { id: 'dca', name: "DCA ต้นเดือน", val: last.dcaFirst, c: colors.dcaFirst, desc: "สายมนุษย์เงินเดือน หลับตาซื้อทุกต้นเดือน" },
-                { id: 'high', name: "ซื้อยอดดอยทุกเดือน", val: last.dcaHigh, c: colors.dcaHigh, desc: "สายซวยสุดๆ ซื้อจุดแพงสุดตลอด" },
-                { id: 'cash', name: "เก็บเงินสดฝังตุ่ม", val: last.cashValue, c: colors.cash, desc: "สายกลัวความเสี่ยง (โดนเงินเฟ้อกัดกิน 3%/ปี)" }
+            let results = [
+                { id: 'low', name: "ซื้อถูกสุดทุกเดือน", val: last.dcaLow, c: colors.dcaLow, desc: "(จับจังหวะแบบพระเจ้า ซื้อจุดต่ำสุดเป๊ะๆ)" },
+                { id: 'lump', name: "ทุ่มก้อนเดียวต้นปี", val: last.lumpSum, c: colors.lumpSum, desc: "(มีเงินก้อน ซื้อตูมเดียวจบตอน ม.ค.)" },
+                { id: 'dca', name: "DCA ต้นเดือนปกติ", val: last.dcaFirst, c: colors.dcaFirst, desc: "(หลับตาหักบัญชีซื้อทุกวันที่ 1)" },
+                { id: 'high', name: "ซื้อยอดดอยทุกเดือน", val: last.dcaHigh, c: colors.dcaHigh, desc: "(คนซวยจัด ซื้อจุดแพงสุดตลอด)" },
+                { id: 'cash', name: "เก็บเงินสดฝังตุ่ม", val: last.cashValue, c: colors.cash, desc: "(ไม่ลงทุน โดนเงินเฟ้อกัดกิน 3%/ปี)" }
             ];
 
-            // หาค่าที่สูงที่สุดเพื่อมอบมงกุฎ
-            const maxVal = Math.max(...results.map(r => r.val));
-            // เรียงลำดับจากกำไรมากไปน้อย
+            // เรียงลำดับจากกำไรมากไปน้อย (ผู้ชนะจะอยู่ index 0 เสมอ)
             results.sort((a, b) => b.val - a.val);
 
-            // วาด Cards (โฟกัสตัวเลขกำไรเป็นหลัก ตาม Feedback)
+            // วาด Cards
             let cardsHTML = '';
             results.forEach((r, idx) => {
                 const profit = r.val - totalCost;
-                const percent = ((profit / totalCost) * 100).toFixed(2);
+                const percent = totalCost > 0 ? ((profit / totalCost) * 100).toFixed(2) : 0;
                 const isProfit = profit >= 0;
                 const colorText = isProfit ? 'text-green-600' : 'text-red-500';
                 const colorBg = isProfit ? 'bg-green-50' : 'bg-red-50';
                 const sign = isProfit ? '+' : '';
-                const isWinner = r.val === maxVal;
                 
+                // Highlight สำหรับผู้ชนะ (อันดับ 1)
+                const isWinner = idx === 0;
+                const cardBaseStyle = isWinner 
+                    ? "bg-white rounded-2xl p-5 shadow-lg border-2 border-yellow-400 flex flex-col justify-between relative transform md:-translate-y-2 z-10" 
+                    : "bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between relative hover:shadow-md transition-shadow";
+
                 cardsHTML += `
-                    <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between relative hover:shadow-md transition-shadow group">
-                        ${isWinner ? '<div class="absolute -top-3 -right-3 text-3xl drop-shadow-md z-10" title="กลยุทธ์ที่ได้กำไรสูงสุด">👑</div>' : ''}
+                    <div class="${cardBaseStyle}">
+                        ${isWinner ? '<div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-yellow-900 text-xs font-black px-3 py-1 rounded-full shadow-md flex items-center gap-1">👑 ผู้ชนะ (ได้กำไรสูงสุด)</div>' : ''}
                         
-                        <div>
+                        <div class="${isWinner ? 'mt-2' : ''}">
                             <div class="flex items-center gap-2 mb-3">
                                 <div class="w-3 h-3 rounded-full" style="background-color: ${r.c}"></div>
                                 <div class="text-[13px] font-bold text-slate-700 leading-tight">${r.name}</div>
                             </div>
                             
-                            <!-- โชว์กำไรตัวเบ้อเริ่ม -->
+                            <!-- โชว์กำไรเป็นหลัก -->
                             <div class="mb-3">
                                 <div class="text-[10px] font-medium text-slate-400 mb-0.5 uppercase tracking-wider">กำไร/ขาดทุน สุทธิ</div>
                                 <div class="flex items-baseline gap-1.5 flex-wrap">
                                     <span class="text-2xl font-black ${colorText} tracking-tight">${sign}${fmtNum(profit)}</span>
-                                    <span class="text-sm font-bold ${colorText} ${colorBg} px-1.5 py-0.5 rounded">${sign}${percent}%</span>
+                                    <span class="text-xs font-bold ${colorText} ${colorBg} px-1.5 py-0.5 rounded">${sign}${percent}%</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="pt-3 border-t border-slate-100">
+                        <div class="pt-3 border-t border-slate-50">
                             <div class="flex justify-between items-baseline mb-1.5">
                                 <span class="text-xs text-slate-500">มูลค่าพอร์ต:</span>
                                 <span class="text-sm font-bold text-slate-800">${fmtNum(r.val)}</span>
                             </div>
-                            <div class="text-[11px] text-slate-400 leading-snug group-hover:text-slate-500 transition-colors">${r.desc}</div>
+                            <div class="text-[11px] text-slate-400 leading-snug">${r.desc}</div>
                         </div>
                     </div>
                 `;
             });
             document.getElementById('summaryCards').innerHTML = cardsHTML;
 
-            // อัปเดตชื่อกราฟ
-            document.getElementById('chartTitle').innerText = `ต้นทุนสะสม: ${fmtTHB(totalCost)}`;
-
             // วาด Chart
+            document.getElementById('chartTitle').innerText = `ต้นทุนสะสม: ${fmtTHB(totalCost)}`;
             const labels = history.map(h => h.date);
+            
+            // แสดงกราฟทุกเส้นเป็นเส้นทึบ ยกเว้นต้นทุนเป็นเส้นประ ตาม Feedback
             const datasets = [
-                { label: 'ต้นทุนสะสม', data: history.map(h => h.cost), borderColor: colors.cost, borderDash: [5,5], fill: true, backgroundColor: 'rgba(203, 213, 225, 0.1)', tension: 0.1, pointRadius: 0, order: 10 },
+                { label: 'ต้นทุนสะสม', data: history.map(h => h.cost), borderColor: colors.cost, borderDash: [5,5], fill: true, backgroundColor: 'rgba(241, 245, 249, 0.5)', tension: 0.1, pointRadius: 0, order: 10 },
                 { label: 'เก็บเงินสดฝังตุ่ม', data: history.map(h => h.cashValue), borderColor: colors.cash, fill: false, tension: 0.1, pointRadius: 0, order: 9 },
-                { label: 'ทุ่มต้นปี (Lump Sum)', data: history.map(h => h.lumpSum), borderColor: colors.lumpSum, fill: false, tension: 0.1, pointRadius: 0, order: 1 },
-                { label: 'DCA ต้นเดือน', data: history.map(h => h.dcaFirst), borderColor: colors.dcaFirst, fill: false, tension: 0.1, pointRadius: 0, order: 2 },
-                
-                // ซ่อนเส้นที่ทำให้รกลูกตาไว้ก่อน ตามคำแนะนำ
-                { label: 'DCA ต่ำสุด', data: history.map(h => h.dcaLow), borderColor: colors.dcaLow, borderDash: [3,3], fill: false, tension: 0.1, pointRadius: 0, order: 3, hidden: true },
-                { label: 'DCA ยอดดอย', data: history.map(h => h.dcaHigh), borderColor: colors.dcaHigh, borderDash: [3,3], fill: false, tension: 0.1, pointRadius: 0, order: 4, hidden: true }
+                { label: 'ทุ่มก้อนเดียวต้นปี', data: history.map(h => h.lumpSum), borderColor: colors.lumpSum, fill: false, tension: 0.1, pointRadius: 0, order: 1 },
+                { label: 'ซื้อถูกสุดทุกเดือน', data: history.map(h => h.dcaLow), borderColor: colors.dcaLow, fill: false, tension: 0.1, pointRadius: 0, order: 3 },
+                { label: 'DCA ต้นเดือนปกติ', data: history.map(h => h.dcaFirst), borderColor: colors.dcaFirst, fill: false, tension: 0.1, pointRadius: 0, order: 2 },
+                { label: 'ซื้อยอดดอยทุกเดือน', data: history.map(h => h.dcaHigh), borderColor: colors.dcaHigh, fill: false, tension: 0.1, pointRadius: 0, order: 4 }
             ];
 
             if (chartInstance) {
@@ -506,21 +560,12 @@
                         maintainAspectRatio: false,
                         interaction: { mode: 'index', intersect: false },
                         scales: { 
-                            y: { 
-                                ticks: { font: {size: 11}, color: '#64748B', callback: function(val) { return "฿" + (val/1000000).toFixed(1) + "M"; } },
-                                grid: { color: '#F1F5F9' }, border: { display: false }
-                            },
-                            x: {
-                                ticks: { font: {size: 11}, color: '#64748B', maxTicksLimit: 12 },
-                                grid: { display: false }, border: { display: false }
-                            }
+                            y: { ticks: { font: {size: 11}, color: '#64748B', callback: function(val) { return "฿" + (val/1000000).toFixed(1) + "M"; } }, grid: { color: '#F8FAFC' }, border: { display: false } },
+                            x: { ticks: { font: {size: 11}, color: '#64748B', maxTicksLimit: 12 }, grid: { display: false }, border: { display: false } }
                         },
                         plugins: { 
                             legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 12, family: 'sans-serif'}, padding: 20 } },
-                            tooltip: { 
-                                backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, titleFont: {size: 13}, bodyFont: {size: 13},
-                                callbacks: { label: function(context) { return context.dataset.label + ': ' + fmtTHB(context.raw); } } 
-                            } 
+                            tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, callbacks: { label: function(context) { return context.dataset.label + ': ' + fmtTHB(context.raw); } } } 
                         }
                     }
                 });
@@ -529,14 +574,13 @@
 
         // 🚀 Boot System
         (async function init() {
-            // โหลดข้อมูล
+            generateYearPills();
+            
             fullVooData = await fetchAndParseData();
             
-            // ปิด Skeleton ลบ class hidden แล้วเปิดเฟด Animation UI หลัก
             document.getElementById('skeletonUI').style.display = 'none';
             const mainUI = document.getElementById('mainContent');
             mainUI.classList.remove('hidden');
-            // Allow browser to render 'display: block' before applying opacity transition
             setTimeout(() => { mainUI.classList.remove('opacity-0'); }, 50);
 
             updateUI();

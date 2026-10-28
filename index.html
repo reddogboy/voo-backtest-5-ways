@@ -3,491 +3,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุน</title>
+    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุน 10 ปี</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F8FAFC; }
-        /* ซ่อนลูกศรขึ้นลงในช่อง input type number สำหรับบางเบราว์เซอร์ (ถ้ามี) */
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        
+        /* Skeleton Animation */
+        @keyframes shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+        .skeleton-box {
+            animation: shimmer 2s infinite linear;
+            background: linear-gradient(to right, #e2e8f0 4%, #cbd5e1 25%, #e2e8f0 36%);
+            background-size: 1000px 100%;
+        }
+        
+        /* ซ่อนลูกศรขึ้นลงในช่องกรอกตัวเลข */
+        input[type="text"] { font-variant-numeric: tabular-nums; }
+        
+        /* Winner Card Animation */
+        .winner-card {
+            border: 2px solid #EAB308;
+            box-shadow: 0 10px 15px -3px rgba(234, 179, 8, 0.3);
+            transform: translateY(-4px);
+            transition: all 0.3s ease;
+        }
+
+        /* ซ่อน Scrollbar ของปุ่มแคปซูลปี */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="p-4 md:p-6 text-slate-800">
 
-    <div class="max-w-6xl mx-auto">
+    <div class="max-w-5xl mx-auto">
+        
         <!-- Header -->
-        <div class="text-center mb-8 mt-2">
-            <h1 class="text-3xl md:text-4xl font-black mb-3 text-slate-900 tracking-tight">VOO DCA Backtest 🇺🇸</h1>
-            <p class="text-slate-500 text-base md:text-lg font-medium">พิสูจน์ด้วยข้อมูลจริง กลยุทธ์ไหนสร้างกำไรได้ดีที่สุดในรอบ 10 ปี</p>
+        <div class="text-center mb-8">
+            <h1 class="text-2xl md:text-3xl font-bold mb-2">VOO DCA Backtest 🇺🇸</h1>
+            <p class="text-slate-500 text-sm md:text-base">พิสูจน์ด้วยข้อมูลจริง กลยุทธ์ไหนสร้างกำไรได้ดีที่สุด</p>
         </div>
 
-        <!-- ⏳ Skeleton UI (แสดงระหว่างรอ API) -->
-        <div id="skeletonUI" class="animate-pulse">
-            <div class="flex justify-center items-center h-20 mb-6">
-                <div class="text-blue-600 font-bold flex flex-col items-center gap-3">
-                    <svg class="animate-spin h-8 w-8" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span>กำลังโหลดข้อมูลล่าสุดจากตลาดหุ้น...</span>
-                </div>
+        <!-- System States (Loading & Error) -->
+        <div id="stateContainer" class="mb-6">
+            <!-- Loading Skeleton -->
+            <div id="loadingBox" class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 text-center">
+                <div class="skeleton-box h-4 w-32 mx-auto mb-4 rounded"></div>
+                <div class="skeleton-box h-8 w-64 mx-auto mb-2 rounded"></div>
+                <div class="text-slate-400 text-sm">กำลังอัปเดตข้อมูลตลาดล่าสุด (Static Fetch)...</div>
             </div>
-            <div class="h-32 bg-slate-200 rounded-2xl mb-6"></div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-                <div class="h-40 bg-slate-200 rounded-2xl"></div>
-                <div class="h-40 bg-slate-200 rounded-2xl"></div>
-                <div class="h-40 bg-slate-200 rounded-2xl"></div>
-                <div class="h-40 bg-slate-200 rounded-2xl"></div>
-                <div class="h-40 bg-slate-200 rounded-2xl"></div>
+            <!-- Error State -->
+            <div id="errorBox" class="hidden bg-red-50 rounded-xl p-6 shadow-sm border border-red-200 text-center">
+                <div class="text-3xl mb-2">📡</div>
+                <div class="text-red-600 font-bold mb-1">ไม่สามารถโหลดข้อมูลได้</div>
+                <div class="text-red-500 text-sm mb-4">อาจกำลังรัน GitHub Actions ครั้งแรกอยู่ หรือเน็ตเวิร์คมีปัญหา</div>
+                <button onclick="window.location.reload()" class="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-200">
+                    ลองใหม่อีกครั้ง
+                </button>
             </div>
-            <div class="h-80 bg-slate-200 rounded-2xl"></div>
         </div>
 
-        <!-- 🟢 Main Content -->
-        <div id="mainContent" class="hidden opacity-0 transition-opacity duration-500">
+        <!-- Main Content (ซ่อนตอนโหลด) -->
+        <div id="mainContent" class="hidden transition-opacity duration-500">
             
-            <!-- Controller: Input & Pop-up Trigger -->
-            <div class="bg-white rounded-2xl p-6 shadow-sm mb-6 border border-slate-100">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+            <!-- Controls (ปุ่มเลือกปี และ ใส่เงิน) -->
+            <div class="bg-white rounded-xl p-5 shadow-sm mb-6 border border-slate-100">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
-                    <!-- ก้อนที่ 1: ใส่ยอดเงินรายเดือน -->
+                    <!-- เลือกปีเริ่มต้น (Pill Buttons) -->
                     <div>
-                        <label class="block text-sm font-bold text-slate-600 mb-2">เงินลงทุน (ต่อเดือน)</label>
-                        <div class="relative mb-3">
-                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-500 font-bold text-xl">฿</span>
-                            <input type="text" id="monthlyInput" inputmode="numeric" value="10,000" class="bg-blue-50 border border-blue-200 text-blue-900 text-2xl font-black rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-3 transition-all outline-none">
-                        </div>
-                        <div class="flex gap-2 flex-wrap">
-                            <button onclick="addMonthlyAmount(5000)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold rounded-lg transition-colors">+ 5K</button>
-                            <button onclick="addMonthlyAmount(10000)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold rounded-lg transition-colors">+ 10K</button>
-                            <button onclick="addMonthlyAmount(50000)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-bold rounded-lg transition-colors">+ 50K</button>
-                            <button onclick="clearMonthlyAmount()" class="px-3 py-1.5 text-slate-400 hover:text-red-500 text-sm font-bold rounded-lg transition-colors ml-auto">ล้าง</button>
+                        <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">📅 ปีที่เริ่มลงทุน (ถึงปัจจุบัน)</label>
+                        <div class="flex overflow-x-auto hide-scrollbar gap-2 pb-2" id="yearPillsContainer">
+                            <!-- ปุ่มปีจะถูกแทรกที่นี่ด้วย JS -->
                         </div>
                     </div>
 
-                    <!-- ก้อนที่ 2: Timeframe (Pop-up Trigger) -->
+                    <!-- ระบุเงินลงทุน -->
                     <div>
-                        <div class="flex justify-between items-end mb-2">
-                            <label class="block text-sm font-bold text-slate-600">ปีที่เริ่มลงทุน (ถึงปัจจุบัน)</label>
-                            <span class="text-xs text-slate-400 font-medium" id="yearlySummaryText">ตกปีละ ฿120,000</span>
+                        <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">💰 เงินลงทุนต่อเดือน (บาท)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold text-lg">฿</span>
+                            <input type="text" inputmode="numeric" id="monthlyInput" value="10,000" 
+                                class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-xl font-black text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
-                        
-                        <!-- Trigger Button -->
-                        <button onclick="openYearModal()" class="w-full bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold text-lg rounded-xl p-4 flex justify-between items-center transition-all shadow-sm">
-                            <div class="flex flex-col text-left">
-                                <span class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-0.5">เริ่มลงทุนปี</span>
-                                <span class="text-xl" id="selectedYearDisplay">2015</span>
-                            </div>
-                            <div class="bg-slate-100 p-2 rounded-lg text-slate-500">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </button>
-                        <p class="text-[11px] text-slate-400 mt-2">* ค่าเริ่มต้นคือปี 2015 กดเพื่อเปลี่ยนปีที่ต้องการ</p>
+                        <div class="flex gap-2 mt-3">
+                            <button onclick="addDca(5000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+5K</button>
+                            <button onclick="addDca(10000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+10K</button>
+                            <button onclick="addDca(50000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+50K</button>
+                        </div>
                     </div>
-
                 </div>
             </div>
 
             <!-- Summary Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="summaryCards">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-6" id="summaryCards">
                 <!-- การ์ดจะถูกสร้างด้วย JavaScript -->
             </div>
 
             <!-- Chart -->
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-8">
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-2">
-                    <div>
-                        <h2 class="text-xl font-bold text-slate-800" id="chartTitle">การเติบโตของมูลค่าพอร์ต</h2>
-                        <p class="text-sm text-slate-500 mt-1 font-medium">เปรียบเทียบกลยุทธ์ต่างๆ กับต้นทุนสะสม <span class="text-blue-500">(💡 แตะที่ชื่อกราฟด้านล่างเพื่อเปิด/ปิดเส้นกราฟ)</span></p>
-                    </div>
+            <div class="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-slate-100">
+                <div class="flex justify-between items-end mb-4">
+                    <h2 class="text-sm md:text-base font-bold text-slate-700" id="chartTitle">ต้นทุนสะสม: ฿0</h2>
                 </div>
-                <div class="relative h-[400px] w-full">
-                    <canvas id="myChart"></canvas>
-                </div>
+                <div class="text-xs text-slate-400 mb-6">เปรียบเทียบกลยุทธ์ต่างๆ กับต้นทุนสะสม ( 💡 แตะที่ชื่อกราฟด้านล่างเพื่อเปิด/ปิดเส้นกราฟ )</div>
+                <canvas id="myChart" height="120"></canvas>
             </div>
 
-            <!-- Footer Warning -->
-            <div class="bg-slate-100 rounded-xl p-5 text-xs text-slate-500 max-w-3xl mx-auto leading-relaxed border border-slate-200 shadow-inner mb-8">
-                <div class="font-bold text-slate-700 mb-1">📌 หมายเหตุสำคัญ:</div>
-                <ul class="list-disc pl-5 space-y-1">
-                    <li>ข้อมูลดึงสดจากตลาดหุ้น หาก API ขัดข้องระบบจะสลับใช้ข้อมูลสำรองอัตโนมัติเพื่อให้เว็บทำงานต่อได้</li>
-                    <li><strong class="text-slate-700">ภัยเงียบของเงินเฟ้อ:</strong> การประเมิน "เก็บเงินสด" อ้างอิงจากเงินเฟ้อเฉลี่ย 3% ต่อปี (ประมาณ 0.25% ต่อเดือน) มูลค่าที่แสดงคือ <u class="font-bold text-red-500">อำนาจซื้อที่ลดลงจริง</u></li>
-                    <li>ผลการดำเนินงานในอดีต มิได้เป็นสิ่งยืนยันถึงผลการดำเนินงานในอนาคต</li>
-                </ul>
+            <!-- Banner โปรโมท -->
+            <div class="mt-6 mb-8 text-center bg-indigo-50 border border-indigo-100 rounded-xl p-4 transition hover:bg-indigo-100">
+                <a href="https://reddogboy.github.io/lottery-kitchenruay-website/" target="_blank" rel="noopener noreferrer" class="block">
+                    <div class="text-indigo-800 font-bold text-sm">👾 ลองเล่นโปรแกรมจำลองและคำนวณอย่างอื่นได้ที่นี่</div>
+                    <div class="text-indigo-500 text-xs mt-1">คลิกเพื่อเปิด KitchenRuay Lottery Simulator</div>
+                </a>
             </div>
 
-            <!-- Cross-Promotion Link (ข้อกำหนดใหม่) -->
-            <div class="text-center pb-10">
-                <div class="inline-flex flex-col sm:flex-row items-center gap-2 px-6 py-3 bg-indigo-50 border border-indigo-100 rounded-full shadow-sm hover:shadow-md transition-shadow">
-                    <span class="text-xl">👾</span>
-                    <span class="text-sm text-slate-600 font-medium">ลองเล่นโปรแกรมจำลองและคำนวณอย่างอื่นได้ที่</span>
-                    <a href="https://reddogboy.github.io/lottery-kitchenruay-website/" target="_blank" rel="noopener noreferrer" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 underline decoration-indigo-300 underline-offset-4 transition-colors">
-                        lottery-kitchenruay-website
-                    </a>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- 🌟 Pop-up Modal สำหรับเลือกปี -->
-    <div id="yearModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4 opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl transform scale-95 transition-transform duration-300" id="yearModalContent">
-            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-                <h3 class="font-bold text-slate-800 text-lg">เลือกปีที่เริ่มลงทุน</h3>
-                <button onclick="closeYearModal()" class="text-slate-400 hover:text-slate-700 bg-white rounded-full p-1 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
-            <div class="p-5 max-h-[60vh] overflow-y-auto grid grid-cols-2 gap-3 bg-white" id="yearModalGrid">
-                <!-- ปุ่มปีจะถูกสร้างด้วย JS -->
-            </div>
         </div>
     </div>
 
     <!-- Logic System -->
     <script>
-        // 💾 1. Fallback Data (ตัวสำรองยามฉุกเฉิน)
-        const FALLBACK_CSV = `Date,Close/Last,Volume,Open,High,Low
-10/27/2026,707.52,5383510,705.40,708.81,703.375
-09/30/2026,700.86,9876125,704.58,707.20,700.56
-08/31/2026,704.89,5741591,705.36,705.94,702.96
-07/31/2026,686.65,7715429,684.50,688.35,678.06
-06/30/2026,686.81,9892397,681.32,687.529,680.99
-05/29/2026,695.49,5080413,695.00,697.00,693.89
-04/30/2026,660.58,5948436,657.00,661.77,653.145
-03/31/2026,597.55,12447250,587.35,598.85,586.50
-02/27/2026,631.04,10471130,628.24,631.69,626.94
-01/30/2026,636.22,6562342,636.25,638.45,631.95
-12/31/2025,627.13,5556821,631.94,632.14,626.94
-11/28/2025,628.41,2953169,626.025,628.63,625.705
-10/31/2025,627.04,7058629,629.84,629.94,624.50
-09/30/2025,612.38,6515666,609.43,612.86,608.27
-08/29/2025,593.08,7512032,595.24,595.55,591.245
-07/31/2025,581.02,7046843,587.83,588.1614,579.84
-06/30/2025,568.03,5750571,567.50,569.15,565.375
-05/30/2025,541.76,6171491,541.35,543.39,536.16
-04/30/2025,509.74,7873686,503.26,511.50,497.76
-03/31/2025,513.91,8196668,505.31,515.33,502.64
-02/28/2025,546.33,7328051,538.42,546.89,535.58
-01/31/2025,553.33,6243322,558.62,560.89,552.71
-12/31/2024,538.81,6040750,542.45,543.0651,537.4001
-11/29/2024,553.45,3988727,551.29,554.70,551.07
-10/31/2024,522.67,7972774,529.09,529.23,522.51
-09/30/2024,527.67,8017349,524.32,527.955,522.19
-08/30/2024,518.04,5637725,515.42,518.58,512.12
-07/31/2024,505.93,5367587,504.48,508.6532,503.305
-06/28/2024,500.13,5598571,502.97,505.73,499.01
-05/31/2024,484.62,5333971,481.24,484.91,476.475
-04/30/2024,461.43,4364836,467.42,468.34,461.36
-03/28/2024,480.70,4065018,480.87,482.1598,480.5034
-02/29/2024,466.93,7332921,466.97,468.49,464.47
-01/31/2024,443.82,7108043,449.04,449.465,443.75
-12/29/2023,436.80,4376885,437.87,438.34,434.94
-11/30/2023,419.40,4405690,418.54,419.70,416.57
-10/31/2023,384.17,4523160,382.35,384.48,380.56
-09/29/2023,392.70,5766585,396.62,396.74,391.30
-08/31/2023,413.83,4751131,414.982,416.12,413.66
-07/31/2023,420.68,3454537,420.32,420.97,419.05
-06/30/2023,407.28,5173692,405.40,408.22,405.29
-05/31/2023,383.89,4205348,384.31,385.16,382.42
-04/28/2023,382.05,3386907,378.04,382.12,378.00
-03/31/2023,376.07,4159844,371.78,376.34,371.65
-02/28/2023,364.11,3022200,365.01,366.86,364.05
-01/31/2023,373.44,4181686,368.61,373.54,368.33
-12/30/2022,351.34,5325447,349.79,351.49,347.7635
-11/30/2022,374.49,4748832,363.45,374.59,361.65
-10/31/2022,354.95,6430961,355.16,356.92,354.05
-09/30/2022,328.30,7736631,332.57,336.19,328.12
-08/31/2022,363.15,4062539,367.61,368.79,363.11
-07/29/2022,378.79,5246413,374.73,379.66,373.93
-06/30/2022,346.88,7159599,345.88,349.84,342.45
-05/31/2022,379.68,5016514,380.23,382.85,376.92
-04/29/2022,378.70,8221944,389.42,391.45,378.00
-03/31/2022,415.17,5876639,420.97,421.67,415.05
-02/28/2022,401.36,11855940,397.18,402.85,396.00
-01/31/2022,413.69,9200435,405.67,413.97,404.35
-12/31/2021,436.57,5185608,437.23,438.38,436.39
-11/30/2021,419.06,8657643,424.80,426.63,418.63
-10/29/2021,422.16,4637741,419.15,422.515,418.87
-09/30/2021,394.40,9511155,400.85,401.52,394.34
-08/31/2021,415.05,6062916,415.66,416.02,414.58
-07/30/2021,403.15,5204480,402.59,404.53,402.4697
-06/30/2021,393.52,3795925,392.72,394.131,392.72
-05/28/2021,386.13,3371117,387.03,387.27,385.94
-04/30/2021,383.57,5219206,383.91,384.76,382.73
-03/31/2021,364.30,7470344,363.39,365.82,363.39
-02/26/2021,349.59,7579472,353.47,354.4678,347.71
-01/29/2021,340.18,5803647,345.31,346.22,338.57
-12/31/2020,343.69,3507320,341.82,344.37,341.23
-11/30/2020,332.64,4175707,333.40,333.63,330.04
-10/30/2020,299.82,5892432,301.56,302.86,296.37
-09/30/2020,307.65,4304504,306.04,310.7499,305.85
-08/31/2020,321.02,5067980,321.98,322.83,320.80
-07/31/2020,300.10,4460643,299.45,300.10,295.24
-06/30/2020,283.43,5215693,279.29,284.95,279.15
-05/29/2020,279.75,7051402,278.03,280.35,275.36
-04/30/2020,267.10,7386574,268.08,268.58,265.23
-03/31/2020,236.82,10386300,239.45,241.94,235.44
-02/28/2020,271.74,23324080,265.32,272.92,262.25
-01/31/2020,295.69,6184691,300.44,300.60,294.72
-12/31/2019,295.80,2512719,294.53,295.99,294.17
-11/29/2019,288.65,1988460,289.25,289.48,288.48
-10/31/2019,278.55,2313622,279.35,279.35,277.15
-09/30/2019,272.60,2736186,271.82,273.265,271.7929
-08/30/2019,268.60,4209570,270.15,270.215,267.6609
-07/31/2019,273.08,4910040,276.39,276.61,271.07
-06/28/2019,269.15,2883271,268.70,269.55,268.18
-05/31/2019,252.87,3698782,253.63,254.49,252.77
-04/30/2019,270.01,2023837,269.56,270.31,268.11
-03/29/2019,259.54,2831125,259.34,259.72,258.18
-02/28/2019,256.07,2206968,256.42,256.88,255.85
-01/31/2019,248.01,5303461,245.86,248.53,245.68
-12/31/2018,229.81,6683814,229.31,229.97,227.45
-11/30/2018,253.48,2992156,251.64,253.94,251.35
-10/31/2018,248.79,4072708,248.72,251.08,248.27
-09/28/2018,267.05,1774229,266.50,267.65,266.43
-08/31/2018,266.72,3172334,266.33,267.2163,265.83
-07/31/2018,258.40,1991981,258.02,259.09,257.60
-06/29/2018,249.51,3709089,249.98,251.36,249.10
-05/31/2018,248.79,2377584,249.99,250.30,248.28
-04/30/2018,242.92,2125995,245.51,246.05,242.85
-03/29/2018,242.08,2911327,239.85,243.61,239.08
-02/28/2018,249.34,2715904,253.37,253.82,249.34
-01/31/2018,258.99,5593519,259.83,260.38,257.95
-12/29/2017,245.29,2326598,246.76,246.77,245.03
-11/30/2017,243.35,5447906,242.30,244.40,242.23
-10/31/2017,236.13,1356927,236.26,236.47,235.90
-09/29/2017,230.76,1726160,229.91,230.83,229.74
-08/31/2017,227.30,2202651,226.63,227.58,226.55
-07/31/2017,226.64,3020044,227.23,227.30,226.44
-06/30/2017,222.06,2982307,222.57,222.91,221.86
-05/31/2017,221.67,2326114,222.04,222.08,220.92
-04/28/2017,218.60,1257631,219.33,219.3399,218.43
-03/31/2017,216.35,1331399,216.56,217.1097,216.35
-02/28/2017,217.07,2179607,217.34,217.58,216.72
-01/31/2017,208.97,3787112,208.34,208.97,207.79
-12/30/2016,205.31,4251392,206.37,206.43,204.51
-11/30/2016,202.40,2359018,203.53,203.692,202.31
-10/31/2016,195.13,1816103,195.49,195.74,194.9801
-09/30/2016,198.80,2635956,198.67,200.12,198.11
-08/31/2016,199.16,1931885,200.08,200.15,198.81
-07/29/2016,199.78,2150383,198.87,199.98,198.40
-06/30/2016,192.42,4295982,191.13,192.83,189.69
-05/31/2016,192.35,2744158,192.48,192.64,191.56
-04/29/2016,189.28,3405786,189.31,190.5899,188.75
-03/31/2016,188.70,2666710,188.75,189.23,188.16
-02/29/2016,177.08,4434193,178.13,178.61,176.69
-01/29/2016,177.62,4925721,173.80,177.83,173.18
-12/31/2015,187.64,3075573,188.94,189.21,187.35
-11/30/2015,191.43,2931165,192.51,192.76,191.24
-10/30/2015,191.07,3134950,190.87,191.80,190.41
-09/30/2015,176.12,5043640,174.52,176.54,173.91
-08/31/2015,181.18,4850380,181.33,182.20,179.62
-07/31/2015,193.30,2275608,194.20,194.39,193.00
-06/30/2015,189.47,2980641,190.23,190.72,188.85
-05/29/2015,193.81,2509172,194.00,194.13,193.12
-04/30/2015,191.48,2238472,190.96,192.23,190.31
-03/31/2015,189.87,3203403,190.48,191.26,189.51
-02/27/2015,193.05,2522770,193.33,193.59,192.74
-01/30/2015,182.93,3102421,185.03,185.50,182.72`;
-
-        function parseFallbackCSV(csvString) {
-            const lines = csvString.trim().split('\n');
-            let monthly = {};
-            for (let i = 1; i < lines.length; i++) {
-                const row = lines[i].split(',');
-                if (row.length < 5 || !row[0]) continue;
-                const dateParts = row[0].split('/');
-                if(dateParts.length !== 3) continue;
-                const year = dateParts[2];
-                const monthStr = dateParts[0].padStart(2, '0');
-                const monthLabel = `${year}-${monthStr}`;
-                
-                const close = parseFloat(row[1]);
-                const open = parseFloat(row[3]);
-                const high = parseFloat(row[4]);
-                const low = parseFloat(row[5]);
-
-                if (!monthly[monthLabel]) {
-                    monthly[monthLabel] = { date: monthLabel, year: parseInt(year), isFirstOfYear: monthStr === '01', open, high, low, close };
-                } else {
-                    monthly[monthLabel].high = Math.max(monthly[monthLabel].high, high);
-                    monthly[monthLabel].low = Math.min(monthly[monthLabel].low, low);
-                    monthly[monthLabel].close = close; 
-                }
-            }
-            return Object.values(monthly).sort((a, b) => a.date.localeCompare(b.date));
-        }
-
-        // 🌐 2. Multi-Proxy API Fetcher
-        async function fetchAndParseData() {
-            const url = 'https://query1.finance.yahoo.com/v8/finance/chart/VOO?interval=1d&range=15y';
-            const proxies = [
-                `https://corsproxy.io/?${encodeURIComponent(url)}`,
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`
-            ];
-
-            for (const proxy of proxies) {
-                try {
-                    const response = await fetch(proxy, { cache: 'no-store' });
-                    if (!response.ok) continue;
-                    const data = await response.json();
-                    if (!data || !data.chart || !data.chart.result) continue;
-
-                    const result = data.chart.result[0];
-                    const timestamps = result.timestamp;
-                    const quote = result.indicators.quote[0];
-                    const adjclose = result.indicators.adjclose ? result.indicators.adjclose[0].adjclose : quote.close;
-
-                    let monthly = {};
-                    for (let i = 0; i < timestamps.length; i++) {
-                        if (quote.open[i] === null) continue; 
-                        const dateObj = new Date(timestamps[i] * 1000);
-                        const year = dateObj.getFullYear();
-                        if (year < 2015) continue;
-                        const monthNum = String(dateObj.getMonth() + 1).padStart(2, '0');
-                        const monthLabel = `${year}-${monthNum}`;
-
-                        const open = quote.open[i];
-                        const high = quote.high[i];
-                        const low = quote.low[i];
-                        const close = adjclose[i];
-
-                        if (!monthly[monthLabel]) {
-                            monthly[monthLabel] = { date: monthLabel, year: year, isFirstOfYear: monthNum === '01', open, high, low, close };
-                        } else {
-                            monthly[monthLabel].high = Math.max(monthly[monthLabel].high, high);
-                            monthly[monthLabel].low = Math.min(monthly[monthLabel].low, low);
-                            monthly[monthLabel].close = close; 
-                        }
-                    }
-                    return Object.values(monthly);
-                } catch (error) {
-                    console.warn(`Proxy failed: ${proxy}`);
-                }
-            }
-            return parseFallbackCSV(FALLBACK_CSV);
-        }
-
-        // Global State
-        let fullVooData = [];
+        // 1. ตัวแปรเก็บข้อมูล
+        let globalVooData = [];
         let chartInstance = null;
-        let selectedStartYear = 2015;
-        let currentMonthlyDca = 10000;
+        let selectedYear = '2015'; // ค่าเริ่มต้น
         
-        // Colors mapping
-        const colors = { 
-            lumpSum: '#2563EB', // น้ำเงิน
-            dcaLow: '#16A34A',  // เขียว
-            dcaFirst: '#EAB308',// เหลือง
-            dcaHigh: '#DC2626', // แดง
-            cash: '#6B7280',    // เทา
-            cost: '#94A3B8'     // เทาอ่อน
+        // 2. Constants & Settings
+        const INFLATION_RATE = 0.03; // เงินเฟ้อ 3% ต่อปี
+        const C = { 
+            lumpSum: '#3B82F6',   // น้ำเงิน
+            dcaLow: '#10B981',    // เขียว
+            dcaFirst: '#EAB308',  // เหลือง
+            dcaHigh: '#EF4444',   // แดง
+            cash: '#94A3B8'       // เทา
         };
-        
-        const fmtTHB = (n) => "฿" + Math.round(n).toLocaleString("th-TH");
-        const fmtNum = (n) => Math.round(n).toLocaleString("th-TH");
 
-        // 3. Logic for Inputs (Auto Comma & Quick Add)
-        monthlyInput.addEventListener('input', function(e) {
-            let rawValue = e.target.value.replace(/[^0-9]/g, '');
-            if(rawValue === '') rawValue = '0';
-            currentMonthlyDca = parseInt(rawValue, 10);
-            e.target.value = currentMonthlyDca === 0 ? '' : currentMonthlyDca.toLocaleString('en-US');
+        // 3. ฟังก์ชัน Format
+        const fmtNum = (n) => Math.round(n).toLocaleString("en-US");
+        const fmtTHB = (n) => "฿" + fmtNum(n);
+        const fmtSign = (n) => (n > 0 ? "+" : "") + fmtNum(n);
+
+        // 4. การจัดการ Input ตัวเลข (ดักลูกน้ำ)
+        const inputEl = document.getElementById('monthlyInput');
+        inputEl.addEventListener('input', function(e) {
+            let val = e.target.value.replace(/[^0-9]/g, ''); // เอาเฉพาะตัวเลข
+            if (val === '') val = '0';
+            e.target.value = fmtNum(parseInt(val));
             updateUI();
         });
 
-        function addMonthlyAmount(amount) {
-            currentMonthlyDca += amount;
-            monthlyInput.value = currentMonthlyDca.toLocaleString('en-US');
+        function addDca(amount) {
+            let current = parseInt(inputEl.value.replace(/,/g, '')) || 0;
+            inputEl.value = fmtNum(current + amount);
             updateUI();
         }
 
-        function clearMonthlyAmount() {
-            currentMonthlyDca = 0;
-            monthlyInput.value = '';
-            updateUI();
+        function getMonthlyDCA() {
+            return parseInt(inputEl.value.replace(/,/g, '')) || 0;
         }
 
-        // 4. Modal (Pop-up) Logic for Year Selection
-        function openYearModal() {
-            yearModal.classList.remove('hidden');
-            yearModal.classList.add('flex');
-            setTimeout(() => {
-                yearModal.classList.remove('opacity-0');
-                yearModalContent.classList.remove('scale-95');
-                yearModalContent.classList.add('scale-100');
-            }, 10);
-        }
-
-        function closeYearModal() {
-            yearModal.classList.add('opacity-0');
-            yearModalContent.classList.remove('scale-100');
-            yearModalContent.classList.add('scale-95');
-            setTimeout(() => {
-                yearModal.classList.add('hidden');
-                yearModal.classList.remove('flex');
-            }, 300);
-        }
-
-        yearModal.addEventListener('click', function(e) {
-            if (e.target === yearModal) closeYearModal();
-        });
-
-        function generateYearOptions() {
-            const currentYear = new Date().getFullYear();
-            const maxYear = currentYear - 1; 
+        // 5. สร้างปุ่มแคปซูลเลือกปีแบบ Dynamic
+        function renderYearPills() {
+            const container = document.getElementById('yearPillsContainer');
+            const currentYear = new Date().getFullYear() - 1; // อัปเดตปีล่าสุดให้อัตโนมัติ (ปลอดภัยสุดคือปีก่อนหน้า)
+            
             let html = '';
-            
-            for(let y = maxYear; y >= 2015; y--) {
-                const isActive = y === selectedStartYear;
-                const activeClass = isActive 
-                    ? "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-200" 
-                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300";
-                
-                let extraText = "";
-                if(y===2019) extraText = "<br><span class='text-[10px] opacity-75 font-normal'>(ก่อนโควิด)</span>";
-                if(y===2020) extraText = "<br><span class='text-[10px] opacity-75 font-normal'>(โควิด)</span>";
-                if(y===2022) extraText = "<br><span class='text-[10px] opacity-75 font-normal'>(ตลาดหมี)</span>";
-
-                html += `<button onclick="setYear(${y})" class="p-3 rounded-xl border text-center font-bold transition-all ${activeClass}">
-                            ${y} ${extraText}
-                         </button>`;
+            for (let y = 2015; y <= currentYear; y++) {
+                const isActive = y.toString() === selectedYear;
+                html += `
+                    <button onclick="changeYear('${y}')" 
+                        class="px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors border
+                        ${isActive ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}">
+                        ${y}
+                    </button>
+                `;
             }
-            yearModalGrid.innerHTML = html;
+            container.innerHTML = html;
         }
 
-        function setYear(year) {
-            selectedStartYear = year;
-            selectedYearDisplay.innerText = year;
-            generateYearOptions();
-            closeYearModal();
+        function changeYear(year) {
+            selectedYear = year;
+            renderYearPills();
             updateUI();
         }
 
-        // 5. Core Engine Backtest
-        function runBacktest(monthlyDca, startYear) {
-            const filteredData = fullVooData.filter(d => d.year >= startYear);
+        // 6. โหลดข้อมูล JSON ที่เกิดจาก GitHub Actions
+        async function fetchRealData() {
+            try {
+                // โหลดไฟล์ voo_data.json ที่วางอยู่โฟลเดอร์เดียวกับ HTML
+                // ใส่ timestamp ป้องกัน Browser แคชไฟล์เก่า
+                const response = await fetch(`./voo_data.json?t=${new Date().getTime()}`); 
+                if (!response.ok) throw new Error("Data not found");
+                
+                const data = await response.json();
+                
+                // ข้อมูลถูก Sort มาแล้วจาก Python แต่ Sort ซ้ำเพื่อความชัวร์ 100%
+                globalVooData = data.sort((a, b) => a.date.localeCompare(b.date));
+                
+                renderYearPills();
+                
+                // สลับ UI ปิดกล่องโหลด เปิดหน้าเว็บหลัก
+                document.getElementById('stateContainer').style.display = 'none';
+                document.getElementById('mainContent').classList.remove('hidden');
+                
+                updateUI();
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                document.getElementById('loadingBox').classList.add('hidden');
+                document.getElementById('errorBox').classList.remove('hidden');
+            }
+        }
+
+        // 7. Core Backtest Engine
+        function runBacktest(monthlyDca, startYearStr) {
             const yearlyDca = monthlyDca * 12;
-            const monthlyInflationRate = 0.03 / 12; 
-            
             let history = [];
+            
             let pLump = { shares: 0, cost: 0 };
             let pFirst = { shares: 0, cost: 0 };
             let pLow = { shares: 0, cost: 0 };
             let pHigh = { shares: 0, cost: 0 };
-            let pCash = { value: 0 }; 
-            
-            const firstDataIndex = filteredData.length > 0 ? 0 : -1;
+            let pCash = { value: 0, cost: 0 };
 
-            filteredData.forEach((d, index) => {
-                pCash.value = (pCash.value * (1 - monthlyInflationRate)) + monthlyDca;
+            // กรองข้อมูลให้เริ่มตั้งแต่ปีที่ผู้ใช้เลือก
+            const filteredData = globalVooData.filter(d => d.date >= startYearStr + "-01");
 
-                if (d.isFirstOfYear || index === firstDataIndex) {
+            filteredData.forEach(d => {
+                // ทุ่มก้อนเดียวต้นปี
+                if (d.isFirstOfYear) {
                     pLump.shares += yearlyDca / d.open;
                     pLump.cost += yearlyDca;
                 }
                 
+                // DCA สายต่างๆ
                 pFirst.shares += monthlyDca / d.open;
                 pFirst.cost += monthlyDca;
 
@@ -496,6 +245,11 @@
 
                 pHigh.shares += monthlyDca / d.high;
                 pHigh.cost += monthlyDca;
+
+                // เงินสดฝังตุ่ม (หักเงินเฟ้อรายเดือน)
+                const monthlyInfl = INFLATION_RATE / 12;
+                pCash.value = (pCash.value * (1 - monthlyInfl)) + monthlyDca;
+                pCash.cost += monthlyDca;
 
                 history.push({
                     date: d.date,
@@ -511,87 +265,79 @@
             return { history, totalCost: pFirst.cost };
         }
 
-        // 6. UI Updater
+        // 8. การวาด UI (อัปเดตตามค่าใหม่)
         function updateUI() {
-            if(fullVooData.length === 0) return;
-
-            const yearlyDca = currentMonthlyDca * 12;
-            yearlySummaryText.innerText = `รวมลงทุนปีละ ${fmtTHB(yearlyDca)}`;
-
-            const { history, totalCost } = runBacktest(currentMonthlyDca, selectedStartYear);
-            if(history.length === 0) {
-                document.getElementById('summaryCards').innerHTML = '<div class="col-span-full text-center text-slate-500 py-10">ไม่มีข้อมูลในปีที่เลือก</div>';
-                return;
-            }
-
-            const last = history[history.length - 1];
+            if (globalVooData.length === 0) return;
             
+            const monthlyDca = getMonthlyDCA();
+            const { history, totalCost } = runBacktest(monthlyDca, selectedYear);
+            
+            if (history.length === 0) return; // ดัก Error ถ้าเลือกปีเกิน
+            const last = history[history.length - 1];
+
+            document.getElementById('chartTitle').innerText = `ต้นทุนสะสม: ${fmtTHB(totalCost)}`;
+
+            // สร้าง Array เพื่อทำการ Sort หาผู้ชนะ
             let results = [
-                { id: 'low', name: "ซื้อถูกสุดทุกเดือน", val: last.dcaLow, c: colors.dcaLow, desc: "(จับจังหวะแบบพระเจ้า ซื้อจุดต่ำสุดเป๊ะๆ)" },
-                { id: 'lump', name: "ทุ่มก้อนเดียวต้นปี", val: last.lumpSum, c: colors.lumpSum, desc: "(มีเงินก้อน ซื้อตูมเดียวจบตอน ม.ค.)" },
-                { id: 'dca', name: "DCA ต้นเดือนปกติ", val: last.dcaFirst, c: colors.dcaFirst, desc: "(หลับตาหักบัญชีซื้อทุกวันที่ 1)" },
-                { id: 'high', name: "ซื้อยอดดอยทุกเดือน", val: last.dcaHigh, c: colors.dcaHigh, desc: "(คนซวยจัด ซื้อจุดแพงสุดตลอด)" },
-                { id: 'cash', name: "เก็บเงินสดฝังตุ่ม", val: last.cashValue, c: colors.cash, desc: "(ไม่ลงทุน โดนเงินเฟ้อกัดกิน 3%/ปี)" }
+                { id: 'lumpSum', name: "ทุ่มก้อนเดียวต้นปี", val: last.lumpSum, c: C.lumpSum, desc: "เงินก้อนพร้อมตั้งแต่ ม.ค." },
+                { id: 'dcaLow', name: "ซื้อถูกสุดทุกเดือน", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะแบบพระเจ้า ซื้อจุดต่ำสุดเป๊ะๆ" },
+                { id: 'dcaFirst', name: "DCA ต้นเดือนปกติ", val: last.dcaFirst, c: C.dcaFirst, desc: "หลับตาหักบัญชีซื้อทุกวันที่ 1" },
+                { id: 'dcaHigh', name: "ซื้อยอดดอยทุกเดือน", val: last.dcaHigh, c: C.dcaHigh, desc: "คนซวยจัด ซื้อจุดแพงสุดตลอด" },
+                { id: 'cash', name: "เก็บเงินสดฝังตุ่ม", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุนเลย โดนเงินเฟ้อกัดกิน 3%/ปี" }
             ];
 
+            // Sort เรียงลำดับคนกำไรมากสุดไปน้อยสุด
             results.sort((a, b) => b.val - a.val);
 
+            // วาด Cards HTML
             let cardsHTML = '';
             results.forEach((r, idx) => {
                 const profit = r.val - totalCost;
-                const percent = totalCost > 0 ? ((profit / totalCost) * 100).toFixed(2) : 0;
-                const isProfit = profit >= 0;
-                const colorText = isProfit ? 'text-green-600' : 'text-red-500';
-                const colorBg = isProfit ? 'bg-green-50' : 'bg-red-50';
-                const sign = isProfit ? '+' : '';
-                
+                const percent = totalCost > 0 ? (profit / totalCost) * 100 : 0;
                 const isWinner = idx === 0;
-                const cardBaseStyle = isWinner 
-                    ? "bg-white rounded-2xl p-5 shadow-lg border-2 border-yellow-400 flex flex-col justify-between relative transform md:-translate-y-2 z-10" 
-                    : "bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col justify-between relative hover:shadow-md transition-shadow";
+                
+                // กำหนดคลาสสี (แดง/เขียว)
+                const isLoss = profit < 0;
+                const profitColor = isLoss ? 'text-red-600' : 'text-green-600';
+                const bgTagColor = isLoss ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700';
 
                 cardsHTML += `
-                    <div class="${cardBaseStyle}">
-                        ${isWinner ? '<div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-yellow-900 text-xs font-black px-3 py-1 rounded-full shadow-md flex items-center gap-1">👑 ผู้ชนะ (ได้กำไรสูงสุด)</div>' : ''}
+                    <div class="bg-white rounded-2xl p-4 relative flex flex-col justify-between ${isWinner ? 'winner-card' : 'border border-slate-100 shadow-sm'}">
+                        ${isWinner ? '<div class="absolute -top-3 -right-2 text-2xl drop-shadow-md">👑</div>' : ''}
                         
-                        <div class="${isWinner ? 'mt-2' : ''}">
-                            <div class="flex items-center gap-2 mb-3">
+                        <div>
+                            <div class="flex items-center gap-2 mb-2">
                                 <div class="w-3 h-3 rounded-full" style="background-color: ${r.c}"></div>
-                                <div class="text-[13px] font-bold text-slate-700 leading-tight">${r.name}</div>
+                                <div class="text-xs font-bold text-slate-700 leading-tight">${r.name}</div>
                             </div>
                             
-                            <div class="mb-3">
-                                <div class="text-[10px] font-medium text-slate-400 mb-0.5 uppercase tracking-wider">กำไร/ขาดทุน สุทธิ</div>
-                                <div class="flex items-baseline gap-1.5 flex-wrap">
-                                    <span class="text-2xl font-black ${colorText} tracking-tight">${sign}${fmtNum(profit)}</span>
-                                    <span class="text-xs font-bold ${colorText} ${colorBg} px-1.5 py-0.5 rounded">${sign}${percent}%</span>
-                                </div>
+                            <div class="text-[10px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">กำไร/ขาดทุน สุทธิ</div>
+                            <div class="text-2xl font-black ${profitColor} mb-1 tracking-tight">
+                                ${fmtSign(profit)}
+                            </div>
+                            <div class="inline-block px-2 py-0.5 rounded ${bgTagColor} text-xs font-bold mb-4">
+                                ${percent > 0 ? '+' : ''}${percent.toFixed(2)}%
                             </div>
                         </div>
 
                         <div class="pt-3 border-t border-slate-50">
-                            <div class="flex justify-between items-baseline mb-1.5">
-                                <span class="text-xs text-slate-500">มูลค่าพอร์ต:</span>
-                                <span class="text-sm font-bold text-slate-800">${fmtNum(r.val)}</span>
-                            </div>
-                            <div class="text-[11px] text-slate-400 leading-snug">${r.desc}</div>
+                            <div class="text-xs text-slate-500">มูลค่าพอร์ต: <span class="font-bold text-slate-800 text-sm">${fmtNum(r.val)}</span></div>
+                            <div class="text-[10px] text-slate-400 mt-1 leading-snug">(${r.desc})</div>
                         </div>
                     </div>
                 `;
             });
             document.getElementById('summaryCards').innerHTML = cardsHTML;
 
-            // วาด Chart
-            document.getElementById('chartTitle').innerText = `ต้นทุนสะสม: ${fmtTHB(totalCost)}`;
+            // วาด Chart.js
             const labels = history.map(h => h.date);
-            
             const datasets = [
-                { label: 'ต้นทุนสะสม', data: history.map(h => h.cost), borderColor: colors.cost, borderDash: [5,5], fill: true, backgroundColor: 'rgba(241, 245, 249, 0.5)', tension: 0.1, pointRadius: 0, order: 10, borderWidth: 2 },
-                { label: 'เก็บเงินสดฝังตุ่ม', data: history.map(h => h.cashValue), borderColor: colors.cash, fill: false, tension: 0.1, pointRadius: 0, order: 9, borderWidth: 2 },
-                { label: 'ทุ่มก้อนเดียวต้นปี', data: history.map(h => h.lumpSum), borderColor: colors.lumpSum, fill: false, tension: 0.1, pointRadius: 0, order: 1, borderWidth: 2.5 },
-                { label: 'ซื้อถูกสุดทุกเดือน', data: history.map(h => h.dcaLow), borderColor: colors.dcaLow, fill: false, tension: 0.1, pointRadius: 0, order: 3, borderWidth: 2 },
-                { label: 'DCA ต้นเดือนปกติ', data: history.map(h => h.dcaFirst), borderColor: colors.dcaFirst, fill: false, tension: 0.1, pointRadius: 0, order: 2, borderWidth: 2.5 },
-                { label: 'ซื้อยอดดอยทุกเดือน', data: history.map(h => h.dcaHigh), borderColor: colors.dcaHigh, fill: false, tension: 0.1, pointRadius: 0, order: 4, borderWidth: 2 }
+                { label: 'ทุ่มก้อนเดียวต้นปี', data: history.map(h => h.lumpSum), borderColor: C.lumpSum, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'DCA ต้นเดือนปกติ', data: history.map(h => h.dcaFirst), borderColor: C.dcaFirst, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'ซื้อถูกสุดทุกเดือน', data: history.map(h => h.dcaLow), borderColor: C.dcaLow, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'ซื้อยอดดอยทุกเดือน', data: history.map(h => h.dcaHigh), borderColor: C.dcaHigh, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'เก็บเงินสดฝังตุ่ม', data: history.map(h => h.cashValue), borderColor: C.cash, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'ต้นทุนสะสม', data: history.map(h => h.cost), borderColor: '#CBD5E1', borderDash: [4,4], fill: false, tension: 0, pointRadius: 0 }
             ];
 
             if (chartInstance) {
@@ -605,52 +351,50 @@
                     data: { labels, datasets },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false,
                         interaction: { mode: 'index', intersect: false },
                         scales: { 
                             y: { 
                                 ticks: { 
-                                    font: {size: 11}, 
-                                    color: '#64748B', 
-                                    // 🔥 Smart Y-Axis Formatter
-                                    callback: function(val) {
-                                        const absVal = Math.abs(val);
-                                        if (absVal >= 1000000) {
-                                            return "฿" + (val/1000000).toFixed(1) + "M";
-                                        } else if (absVal >= 10000) {
-                                            return "฿" + (val/1000).toFixed(0) + "k";
-                                        } else {
-                                            return "฿" + val.toLocaleString('th-TH');
-                                        }
+                                    // Smart Dynamic Y-Axis (ไม่ค้างที่ 0.0M ถ้าเงินน้อย)
+                                    callback: function(val) { 
+                                        if (val >= 1000000) return "฿" + (val/1000000).toFixed(1) + "M"; 
+                                        if (val >= 10000) return "฿" + (val/1000).toFixed(0) + "k";
+                                        return "฿" + val;
                                     } 
-                                }, 
-                                grid: { color: '#F8FAFC' }, 
-                                border: { display: false } 
+                                },
+                                grid: { color: '#F1F5F9' },
+                                border: { display: false }
                             },
-                            x: { ticks: { font: {size: 11}, color: '#64748B', maxTicksLimit: 12 }, grid: { display: false }, border: { display: false } }
+                            x: {
+                                grid: { display: false },
+                                border: { display: false },
+                                ticks: { color: '#94A3B8', maxTicksLimit: 8 }
+                            }
                         },
                         plugins: { 
-                            legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: {size: 12, family: 'sans-serif'}, padding: 20 } },
-                            tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, callbacks: { label: function(context) { return context.dataset.label + ': ' + fmtTHB(context.raw); } } } 
+                            tooltip: { 
+                                callbacks: { 
+                                    label: function(context) { 
+                                        return context.dataset.label + ': ' + fmtTHB(context.raw); 
+                                    } 
+                                },
+                                backgroundColor: '#1E293B',
+                                titleFont: { size: 13 },
+                                bodyFont: { size: 12 },
+                                padding: 10,
+                                cornerRadius: 8
+                            },
+                            legend: {
+                                labels: { boxWidth: 12, usePointStyle: true, font: { size: 11 } }
+                            }
                         }
                     }
                 });
             }
         }
 
-        // 🚀 Boot System
-        (async function init() {
-            generateYearOptions();
-            
-            fullVooData = await fetchAndParseData();
-            
-            document.getElementById('skeletonUI').style.display = 'none';
-            const mainUI = document.getElementById('mainContent');
-            mainUI.classList.remove('hidden');
-            setTimeout(() => { mainUI.classList.remove('opacity-0'); }, 50);
-
-            updateUI();
-        })();
+        // เริ่มต้นการทำงาน (เรียกข้อมูลจาก JSON)
+        fetchRealData();
     </script>
 </body>
 </html>

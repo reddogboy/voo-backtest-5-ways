@@ -178,7 +178,7 @@
         // 3. Formatters
         const fmtNum = (n) => Math.round(n).toLocaleString("en-US");
         const fmtTHB = (n) => "฿" + fmtNum(n);
-        const fmtSign = (n) => (n > 0 ? "+฿ " : "") + fmtNum(n);
+        const fmtSign = (n) => (n > 0 ? "+" : "") + fmtNum(n);
         
         // Formatter สำหรับแปลงตัวเลขในกราฟให้เป็น K หรือ M
         const compactNum = (val) => {

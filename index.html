@@ -344,9 +344,9 @@
             document.getElementById('chartTitle').innerText = `ต้นทุนสะสม: ${fmtTHB(totalCost)}`;
 
             let results = [
-                { id: 'lumpSum', name: "Lump Sum 💥", val: last.lumpSum, c: C.lumpSum, desc: "ทุ่มก้อนใหญ่ทีเดียวทุกต้นปี" },
+                { id: 'lumpSum', name: "Lump Sum 💥", val: last.lumpSum, c: C.lumpSum, desc: "ทุ่มก้อนใหญ่ซื้อทีเดียวทุกต้นปี" },
                 { id: 'dcaLow', name: "Buy Low 🤩", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะ ซื้อตอนถูกที่สุดทุกเดือน" },
-                { id: 'dcaFirst', name: "DCA 🌱", val: last.dcaFirst, c: C.dcaFirst, desc: "ลงทุนวันแรกของทุกเดือน" },
+                { id: 'dcaFirst', name: "DCA ต้นเดือน 🌱", val: last.dcaFirst, c: C.dcaFirst, desc: "ลงทุนวันแรกของทุกเดือน" },
                 { id: 'dcaHigh', name: "Buy High 🏔️", val: last.dcaHigh, c: C.dcaHigh, desc: "ซวยจัด ซื้อตอนแพงที่สุดทุกเดือน" },
                 { id: 'cash', name: "Cash 💸", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุน โดนเงินเฟ้อกิน" }
             ];
@@ -399,11 +399,11 @@
             // วาด Chart
             const labels = history.map(h => h.date);
             const datasets = [
-                { label: 'ทุ่มก้อนเดียวต้นปี', data: history.map(h => h.lumpSum), borderColor: C.lumpSum, fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'ซื้อถูกสุดทุกเดือน', data: history.map(h => h.dcaLow), borderColor: C.dcaLow, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'Lump Sum', data: history.map(h => h.lumpSum), borderColor: C.lumpSum, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'Buy Low', data: history.map(h => h.dcaLow), borderColor: C.dcaLow, fill: false, tension: 0.1, pointRadius: 0 },
                 { label: 'DCA ต้นเดือน', data: history.map(h => h.dcaFirst), borderColor: C.dcaFirst, fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'ซื้อแพงสุดทุกเดือน', data: history.map(h => h.dcaHigh), borderColor: C.dcaHigh, fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'เก็บเงินสดไว้เฉย ๆ', data: history.map(h => h.cashValue), borderColor: C.cash, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'Buy High', data: history.map(h => h.dcaHigh), borderColor: C.dcaHigh, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'Cash', data: history.map(h => h.cashValue), borderColor: C.cash, fill: false, tension: 0.1, pointRadius: 0 },
                 { label: 'ต้นทุนสะสม', data: history.map(h => h.cost), borderColor: C.cost, borderDash: [4,4], fill: false, tension: 0, pointRadius: 0, borderWidth: 2 }
             ];
 

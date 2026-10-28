@@ -1,0 +1,39 @@
+name: Auto-Update VOO Data
+กำหนดเงื่อนไขว่าบอทจะทำงานตอนไหน
+on:
+schedule:
+# ตั้งเวลาทำงานทุกวันตอน 00:00 UTC (ประมาณ 7 โมงเช้าเวลาไทย) ตลาดหุ้นอเมริกาปิดพอดี
+- cron: '0 0 * * *'
+เพิ่มปุ่ม workflow_dispatch เพื่อให้เราสามารถกดปุ่ม "Run workflow" ได้ด้วยตัวเองบนเว็บ GitHub
+workflow_dispatch:
+กำหนดสิทธิ์ให้บอทสามารถเขียนไฟล์ทับลงบน Repository ของเราได้
+permissions:
+contents: write
+jobs:
+build-and-update:
+runs-on: ubuntu-latest
+steps:
+# Step 1: ดาวน์โหลดโค้ดของเรามาไว้ในเครื่องเซิร์ฟเวอร์จำลองของ GitHub
+- name: Checkout Repository
+uses: actions/checkout@v3
+# Step 2: ติดตั้ง Python
+- name: Set up Python
+uses: actions/setup-python@v4
+with:
+python-version: '3.10'
+# Step 3: ติดตั้งแพ็กเกจ yfinance (สำหรับดูดข้อมูลหุ้น) และ pandas
+- name: Install Dependencies
+run: |
+python -m pip install --upgrade pip
+pip install yfinance pandas
+# Step 4: รันสคริปต์ Python เพื่อสร้างไฟล์ voo_data.json ล่าสุด
+- name: Fetch Latest Data
+run: python fetch_data.py
+# Step 5: ตรวจสอบว่ามีการเปลี่ยนแปลงหรือไม่ และกด Commit & Push กลับเข้า GitHub ของเรา
+- name: Commit and Push changes
+run: |
+git config --global user.name 'github-actions[bot]'
+git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+git add voo_data.json
+# ถ้าไฟล์มีข้อมูลใหม่ ให้ Commit, แต่ถ้าวันนี้ตลาดปิดไม่มีข้อมูลใหม่ ให้ข้ามไป (ไม่พัง)
+git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Auto-update VOO data [$(date +'%Y-%m-%d')]" && git push)

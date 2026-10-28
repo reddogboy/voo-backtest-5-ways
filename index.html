@@ -2,8 +2,9 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุน</title>
+    <!-- 🌟 แก้ปัญหา Auto-Zoom ด้วยการล็อค user-scalable=0 อย่างเด็ดขาด -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุนระยะยาว</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -23,6 +24,13 @@
         /* ซ่อนลูกศรขึ้น/ลงในช่องกรอกตัวเลข */
         input[type="text"] { font-variant-numeric: tabular-nums; }
         
+        /* 🌟 บังคับฟอนต์ 16px บนมือถือเพื่อป้องกัน iOS Auto-Zoom */
+        @media screen and (max-width: 768px) {
+            input[type="text"], select {
+                font-size: 16px !important;
+            }
+        }
+        
         /* Winner Card Animation */
         .winner-card {
             border: 2px solid #EAB308;
@@ -31,10 +39,11 @@
             background: linear-gradient(to bottom right, #ffffff, #fefce8);
         }
 
-        /* Modal Overlay */
-        .modal-overlay {
-            background-color: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
+        /* ซ่อนลูกศรของ Select เดิม เพื่อใช้ลูกศร Custom ของเราเอง */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
     </style>
 </head>
@@ -81,8 +90,8 @@
                         </div>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold text-lg">฿</span>
-                            <input type="text" inputmode="numeric" id="monthlyInput" value="1,000" 
-                                class="w-full pl-8 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-lg text-xl font-black text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                            <input type="text" inputmode="numeric" id="monthlyInput" value="10,000" 
+                                class="w-full pl-8 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-lg font-black text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-[16px] md:text-xl">
                             <!-- ปุ่มกากบาทล้างค่า (Clear) -->
                             <button onclick="clearInput()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-red-500 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -95,17 +104,20 @@
                         </div>
                     </div>
 
-                    <!-- ส่วนเลือกปีเริ่มต้น (Pop-up Trigger) -->
+                    <!-- ส่วนเลือกปีเริ่มต้น (🌟 ระบบ Wheel Native Select) -->
                     <div class="flex flex-col justify-center">
                         <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">📅 ปีที่เริ่มลงทุน (ถึงปัจจุบัน)</label>
-                        <button onclick="openYearModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white flex items-center justify-between px-5 py-4 rounded-lg transition-all shadow-sm">
-                            <span class="text-sm font-semibold">เริ่มต้นตั้งแต่ปี:</span>
-                            <div class="flex items-center gap-2">
-                                <span id="yearDisplayBtn" class="text-xl font-black text-yellow-300">2015</span>
-                                <span class="text-slate-400 text-xs">▼</span>
+                        <div class="relative w-full">
+                            <!-- เปลี่ยนจาก Button เป็น Select เพื่อเรียก Wheel ของมือถือ -->
+                            <select id="yearSelect" onchange="changeYear(this.value)" class="w-full bg-slate-800 hover:bg-slate-900 text-yellow-300 font-black px-5 py-4 rounded-lg transition-all shadow-sm text-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 text-[16px] md:text-xl">
+                                <!-- Options จะถูกสร้างด้วย JavaScript -->
+                            </select>
+                            <!-- ไอคอนลูกศรชี้ลง -->
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-400">
+                                <span class="text-xs">▼</span>
                             </div>
-                        </button>
-                        <div class="text-[10px] text-slate-400 mt-2 text-right">แตะเพื่อเปลี่ยนปีเริ่มต้นการทดสอบ</div>
+                        </div>
+                        <div class="text-[10px] text-slate-400 mt-2 text-right">แตะเพื่อหมุนเลือกปีเริ่มต้น</div>
                     </div>
                 </div>
             </div>
@@ -121,37 +133,27 @@
                 <div class="text-[10px] sm:text-xs text-slate-400 mb-4 flex items-center gap-1">
                     <span>💡</span> แตะที่ชื่อกราฟด้านล่างเพื่อ ซ่อน/แสดง เส้นกราฟ
                 </div>
-                <!-- 🌟 ล็อกความสูงเพื่อป้องกันกราฟเพี้ยน/ยืด (เผื่อที่ให้ Legend ด้วย) -->
                 <div class="relative w-full h-[320px] md:h-[400px]">
                     <canvas id="myChart"></canvas>
                 </div>
             </div>
 
             <!-- Banner โปรโมท -->
-            <div class="text-center bg-indigo-50 border border-indigo-100 rounded-xl p-4 transition hover:bg-indigo-100 shadow-sm mb-4">
+            <div class="text-center bg-indigo-50 border border-indigo-100 rounded-xl p-4 transition hover:bg-indigo-100 shadow-sm mb-6">
                 <a href="https://reddogboy.github.io/lottery-kitchenruay-website/" target="_blank" rel="noopener noreferrer" class="block">
                     <div class="text-indigo-800 font-bold text-sm md:text-base">👾 ลองเล่นโปรแกรมจำลองและคำนวณอย่างอื่นได้ที่นี่</div>
                     <div class="text-indigo-500 text-xs md:text-sm mt-1">คลิก 👉🏻 @lottery_kitchenruay</div>
                 </a>
             </div>
 
-        </div>
-    </div>
-
-    <!-- 🌟 Pop-up Modal สำหรับเลือกปี -->
-    <div id="yearModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-2xl shadow-2xl p-5 w-[90%] max-w-sm transform scale-95 transition-transform duration-300" id="yearModalContent">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-lg text-slate-800">เลือกปีที่เริ่มลงทุน</h3>
-                <button onclick="closeYearModal()" class="text-slate-400 hover:text-red-500 font-bold text-2xl leading-none">&times;</button>
+            <!-- 🌟 Disclaimer (คำเตือน) -->
+            <div class="text-center border-t border-slate-200 pt-6 pb-2 px-2">
+                <p class="text-[10px] sm:text-xs text-slate-400 leading-relaxed font-medium">
+                    <strong class="text-slate-500">คำเตือน:</strong> ไม่ใช่คำแนะนำในการลงทุน การลงทุนมีความเสี่ยง ผู้ลงทุนควรศึกษาข้อมูลก่อนตัดสินใจลงทุน<br class="hidden md:block"> 
+                    ผลการดำเนินงานในอดีตไม่ได้เป็นสิ่งยืนยันถึงผลการดำเนินงานในอนาคต เว็บไซต์นี้เป็นเพียงการคำนวณเพื่อเป็นแนวทางศึกษาเท่านั้น
+                </p>
             </div>
-            
-            <!-- ปุ่มปีจะถูกสร้างที่นี่ -->
-            <div id="modalYearGrid" class="grid grid-cols-3 gap-3 mb-6 max-h-64 overflow-y-auto pr-1"></div>
-            
-            <button onclick="closeYearModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition">
-                ปิดหน้าต่าง
-            </button>
+
         </div>
     </div>
 
@@ -165,7 +167,6 @@
         // 2. Constants & Settings
         const INFLATION_RATE = 0.03; // เงินเฟ้อ 3% ต่อปี
         
-        // อัปเดตสีตามที่ขอ: เงินสด=เทาเข้ม(ดำ), ต้นทุน=เทาอ่อน
         const C = { 
             lumpSum: '#3B82F6',   // น้ำเงิน
             dcaLow: '#10B981',    // เขียว
@@ -213,53 +214,24 @@
             return parseInt(inputEl.value.replace(/,/g, '')) || 0;
         }
 
-        // 5. ระบบ Pop-up Modal สำหรับเลือกปี
-        function initYearModal() {
-            const grid = document.getElementById('modalYearGrid');
+        // 5. 🌟 ระบบเลือกปีแบบล้อเลื่อน (Wheel Select)
+        function initYearSelect() {
+            const selectEl = document.getElementById('yearSelect');
             const currentYear = new Date().getFullYear();
-            const maxYear = currentYear - 1; 
+            const maxYear = currentYear - 1; // ล็อกให้ถึงปีก่อนปัจจุบัน
             
             let html = '';
+            // ลูปสร้าง <option> ตั้งแต่ 2015 ถึง ปีก่อนหน้า
             for (let y = 2015; y <= maxYear; y++) {
-                const isActive = y.toString() === selectedYear;
-                html += `
-                    <button onclick="changeYear('${y}')" 
-                        class="py-3 rounded-xl text-sm font-bold transition-all border
-                        ${isActive ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}">
-                        ${y}
-                    </button>
-                `;
+                const isSelected = y.toString() === selectedYear ? 'selected' : '';
+                html += `<option value="${y}" ${isSelected}>เริ่มตั้งแต่ปี ${y}</option>`;
             }
-            grid.innerHTML = html;
-            document.getElementById('yearDisplayBtn').innerText = selectedYear;
-        }
-
-        function openYearModal() {
-            initYearModal();
-            const modal = document.getElementById('yearModal');
-            const content = document.getElementById('yearModalContent');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
-            }, 10);
-        }
-
-        function closeYearModal() {
-            const modal = document.getElementById('yearModal');
-            const content = document.getElementById('yearModalContent');
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
+            selectEl.innerHTML = html;
         }
 
         function changeYear(year) {
             selectedYear = year;
-            closeYearModal();
-            document.getElementById('yearDisplayBtn').innerText = selectedYear;
-            updateUI();
+            updateUI(); // เมื่อผู้ใช้หมุนวงล้อเสร็จ ให้อัปเดตกราฟทันที
         }
 
         // 6. ดึงข้อมูลจากไฟล์ JSON
@@ -276,7 +248,7 @@
                 document.getElementById('stateContainer').style.display = 'none';
                 document.getElementById('mainContent').classList.remove('hidden');
                 
-                initYearModal();
+                initYearSelect(); // เรียกสร้าง Wheel
                 updateUI();
             } catch (error) {
                 console.error("Fetch Data Error:", error);
@@ -331,7 +303,7 @@
             return { history, totalCost: pFirst.cost };
         }
 
-        // 🌟 ฟังก์ชันสร้าง Custom HTML Tooltip (แก้ปัญหาจัด : ให้ตรงกัน และ มีปุ่ม ✖)
+        // ฟังก์ชันสร้าง Custom HTML Tooltip (มีปุ่ม ✖)
         const getOrCreateTooltip = (chart) => {
             let tooltipEl = chart.canvas.parentNode.querySelector('#custom-tooltip');
             if (!tooltipEl) {
@@ -341,7 +313,7 @@
                 tooltipEl.style.borderRadius = '12px';
                 tooltipEl.style.color = 'white';
                 tooltipEl.style.opacity = 1;
-                tooltipEl.style.pointerEvents = 'auto'; // 🌟 สำคัญมาก: ให้คลิกปุ่ม ✖ ในกล่องได้
+                tooltipEl.style.pointerEvents = 'auto'; // ให้คลิกปุ่ม ✖ ในกล่องได้
                 tooltipEl.style.position = 'absolute';
                 tooltipEl.style.transition = 'all 0.2s ease';
                 tooltipEl.style.zIndex = 100;
@@ -358,7 +330,6 @@
             const tooltipEl = getOrCreateTooltip(chart);
 
             if (tooltip.opacity === 0) {
-                // ซ่อน tooltip แบบนุ่มนวล
                 tooltipEl.style.opacity = 0;
                 tooltipEl.style.pointerEvents = 'none';
                 return;
@@ -367,7 +338,6 @@
             if (tooltip.body) {
                 const titleLines = tooltip.title || [];
                 
-                // 🌟 แทรกปุ่ม ✖ (กากบาท) ที่มุมขวาบน
                 let innerHtml = `
                     <button onclick="document.getElementById('custom-tooltip').style.opacity = '0'; document.getElementById('custom-tooltip').style.pointerEvents = 'none';" 
                             class="absolute top-2 right-2 text-slate-400 hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-600 font-bold text-lg z-50">
@@ -379,7 +349,6 @@
                     innerHtml += `<div class="font-bold text-sm mb-3 text-white border-b border-slate-700 pb-2 pr-6">${title}</div>`;
                 });
 
-                // 🌟 ใช้ Table HTML เพื่อล็อกตำแหน่งเครื่องหมาย ':' ให้ตรงกัน 100%
                 innerHtml += '<table class="w-full text-[11px] sm:text-xs">';
                 tooltip.body.forEach((bodyItem, i) => {
                     const colors = tooltip.labelColors[i];
@@ -404,24 +373,21 @@
             const {offsetLeft: positionX, offsetTop: positionY} = chart.canvas;
 
             tooltipEl.style.opacity = 1;
-            tooltipEl.style.pointerEvents = 'auto'; // เปิดให้กดปุ่ม ✖ ได้
+            tooltipEl.style.pointerEvents = 'auto';
 
-            // 🌟 ป้องกันกล่อง Tooltip ล้นจอ (Dynamic Positioning)
             let caretY = tooltip.caretY;
             let caretX = tooltip.caretX;
             
             if (caretX > chart.width / 2) {
-                // ถ้าแตะฝั่งขวา ให้กล่องเด้งไปอยู่ทางซ้ายมือ
                 tooltipEl.style.left = 'auto';
                 tooltipEl.style.right = (chart.width - caretX + 15) + 'px';
             } else {
-                // ถ้าแตะฝั่งซ้าย ให้กล่องเด้งไปอยู่ทางขวามือ
                 tooltipEl.style.right = 'auto';
                 tooltipEl.style.left = (caretX + 15) + 'px';
             }
             
             let topPos = positionY + caretY - (tooltipEl.offsetHeight / 2);
-            if(topPos < 10) topPos = 10; // ดักไม่ให้ทะลุขอบบน
+            if(topPos < 10) topPos = 10; 
             
             tooltipEl.style.top = topPos + 'px';
         };
@@ -536,8 +502,8 @@
                         },
                         plugins: { 
                             tooltip: { 
-                                enabled: false, // 🌟 ปิด Tooltip ธรรมดา
-                                external: externalTooltipHandler // 🌟 เปิดใช้ Custom HTML Tooltip แบบใหม่ที่มีกากบาท
+                                enabled: false, 
+                                external: externalTooltipHandler 
                             },
                             legend: {
                                 position: 'bottom',

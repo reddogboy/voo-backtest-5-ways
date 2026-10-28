@@ -2,132 +2,166 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุน 10 ปี</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุน</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F8FAFC; }
         
-        /* Skeleton Animation */
+        /* Loading Skeleton Animation */
         @keyframes shimmer {
             0% { background-position: -1000px 0; }
             100% { background-position: 1000px 0; }
         }
-        .skeleton-box {
+        .skeleton {
             animation: shimmer 2s infinite linear;
             background: linear-gradient(to right, #e2e8f0 4%, #cbd5e1 25%, #e2e8f0 36%);
             background-size: 1000px 100%;
         }
         
-        /* ซ่อนลูกศรขึ้นลงในช่องกรอกตัวเลข */
+        /* เอาลูกศรขึ้น/ลงในช่องกรอกตัวเลขออก (Chrome/Safari) */
         input[type="text"] { font-variant-numeric: tabular-nums; }
         
         /* Winner Card Animation */
         .winner-card {
             border: 2px solid #EAB308;
             box-shadow: 0 10px 15px -3px rgba(234, 179, 8, 0.3);
-            transform: translateY(-4px);
-            transition: all 0.3s ease;
+            transform: translateY(-2px);
+            background: linear-gradient(to bottom right, #ffffff, #fefce8);
         }
 
-        /* ซ่อน Scrollbar ของปุ่มแคปซูลปี */
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Modal Overlay */
+        .modal-overlay {
+            background-color: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+        }
     </style>
 </head>
-<body class="p-4 md:p-6 text-slate-800">
+<body class="p-3 md:p-6 text-slate-800 pb-20">
 
     <div class="max-w-5xl mx-auto">
         
         <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-2xl md:text-3xl font-bold mb-2">VOO DCA Backtest 🇺🇸</h1>
-            <p class="text-slate-500 text-sm md:text-base">พิสูจน์ด้วยข้อมูลจริง กลยุทธ์ไหนสร้างกำไรได้ดีที่สุด</p>
+        <div class="text-center mb-6 mt-2">
+            <h1 class="text-2xl md:text-3xl font-black mb-1">VOO DCA Backtest 🇺🇸</h1>
+            <p class="text-slate-500 text-xs md:text-base">กลยุทธ์ไหนสร้างกำไรได้ดีที่สุดในรอบ 10 ปี</p>
         </div>
 
         <!-- System States (Loading & Error) -->
         <div id="stateContainer" class="mb-6">
-            <!-- Loading Skeleton -->
-            <div id="loadingBox" class="bg-white rounded-xl p-6 shadow-sm border border-slate-100 text-center">
-                <div class="skeleton-box h-4 w-32 mx-auto mb-4 rounded"></div>
-                <div class="skeleton-box h-8 w-64 mx-auto mb-2 rounded"></div>
-                <div class="text-slate-400 text-sm">กำลังอัปเดตข้อมูลตลาดล่าสุด (Static Fetch)...</div>
+            <!-- Loading Box -->
+            <div id="loadingBox" class="bg-white rounded-xl p-8 shadow-sm border border-slate-100 text-center">
+                <div class="skeleton h-4 w-40 mx-auto mb-4 rounded"></div>
+                <div class="skeleton h-10 w-64 mx-auto mb-3 rounded"></div>
+                <div class="text-slate-400 text-sm font-semibold animate-pulse">กำลังโหลดข้อมูลล่าสุดจากตลาดหุ้น...</div>
             </div>
-            <!-- Error State -->
-            <div id="errorBox" class="hidden bg-red-50 rounded-xl p-6 shadow-sm border border-red-200 text-center">
-                <div class="text-3xl mb-2">📡</div>
-                <div class="text-red-600 font-bold mb-1">ไม่สามารถโหลดข้อมูลได้</div>
-                <div class="text-red-500 text-sm mb-4">อาจกำลังรัน GitHub Actions ครั้งแรกอยู่ หรือเน็ตเวิร์คมีปัญหา</div>
-                <button onclick="window.location.reload()" class="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-200">
+            <!-- Error Box -->
+            <div id="errorBox" class="hidden bg-red-50 rounded-xl p-8 shadow-sm border border-red-200 text-center">
+                <div class="text-4xl mb-3">📡</div>
+                <div class="text-red-600 font-bold text-lg mb-1">ไม่สามารถโหลดข้อมูลได้</div>
+                <div class="text-red-500 text-sm mb-6">ระบบอาจกำลังอัปเดตข้อมูล หรือ GitHub Actions ยังทำงานไม่เสร็จ</div>
+                <button onclick="window.location.reload()" class="bg-red-600 text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-red-700 transition">
                     ลองใหม่อีกครั้ง
                 </button>
             </div>
         </div>
 
-        <!-- Main Content (ซ่อนตอนโหลด) -->
+        <!-- Main Content (โชว์เมื่อโหลดข้อมูลเสร็จ) -->
         <div id="mainContent" class="hidden transition-opacity duration-500">
             
-            <!-- Controls (ปุ่มเลือกปี และ ใส่เงิน) -->
-            <div class="bg-white rounded-xl p-5 shadow-sm mb-6 border border-slate-100">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Controls (ใส่เงิน และ ปุ่มเลือกปี) -->
+            <div class="bg-white rounded-xl p-4 md:p-6 shadow-sm mb-5 border border-slate-100">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     
-                    <!-- เลือกปีเริ่มต้น (Pill Buttons) -->
+                    <!-- ส่วนเลือกเงินลงทุนรายเดือน -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">📅 ปีที่เริ่มลงทุน (ถึงปัจจุบัน)</label>
-                        <div class="flex overflow-x-auto hide-scrollbar gap-2 pb-2" id="yearPillsContainer">
-                            <!-- ปุ่มปีจะถูกแทรกที่นี่ด้วย JS -->
+                        <div class="flex justify-between items-end mb-2">
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide">💰 เงินลงทุนต่อเดือน (บาท)</label>
                         </div>
-                    </div>
-
-                    <!-- ระบุเงินลงทุน -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">💰 เงินลงทุนต่อเดือน (บาท)</label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold text-lg">฿</span>
                             <input type="text" inputmode="numeric" id="monthlyInput" value="10,000" 
-                                class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg text-xl font-black text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                                class="w-full pl-8 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-lg text-xl font-black text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                            <!-- ปุ่มกากบาทล้างค่า (Clear) -->
+                            <button onclick="clearInput()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-red-500 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                            </button>
                         </div>
                         <div class="flex gap-2 mt-3">
-                            <button onclick="addDca(5000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+5K</button>
-                            <button onclick="addDca(10000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+10K</button>
-                            <button onclick="addDca(50000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+50K</button>
+                            <button onclick="addAmount(5000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+5K</button>
+                            <button onclick="addAmount(10000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+10K</button>
+                            <button onclick="addAmount(50000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+50K</button>
                         </div>
+                    </div>
+
+                    <!-- ส่วนเลือกปีเริ่มต้น (Pop-up Trigger) -->
+                    <div class="flex flex-col justify-center">
+                        <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">📅 ปีที่เริ่มลงทุน (ถึงปัจจุบัน)</label>
+                        <button onclick="openYearModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white flex items-center justify-between px-5 py-4 rounded-lg transition-all shadow-sm">
+                            <span class="text-sm font-semibold">เริ่มต้นตั้งแต่ปี:</span>
+                            <div class="flex items-center gap-2">
+                                <span id="yearDisplayBtn" class="text-xl font-black text-yellow-300">2015</span>
+                                <span class="text-slate-400 text-xs">▼</span>
+                            </div>
+                        </button>
+                        <div class="text-[10px] text-slate-400 mt-2 text-right">แตะเพื่อเปลี่ยนปีเริ่มต้นการทดสอบ</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-6" id="summaryCards">
-                <!-- การ์ดจะถูกสร้างด้วย JavaScript -->
-            </div>
+            <!-- Summary Cards (Grid แนวนอนกะทัดรัดบนมือถือ) -->
+            <!-- สังเกตคลาส grid-cols-2 คือบนมือถือจะแบ่ง 2 ซีก ทำให้ดูกระชับขึ้นมาก -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6" id="summaryCards"></div>
 
             <!-- Chart -->
-            <div class="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-slate-100">
-                <div class="flex justify-between items-end mb-4">
+            <div class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-100 mb-6">
+                <div class="flex justify-between items-end mb-2">
                     <h2 class="text-sm md:text-base font-bold text-slate-700" id="chartTitle">ต้นทุนสะสม: ฿0</h2>
                 </div>
-                <div class="text-xs text-slate-400 mb-6">เปรียบเทียบกลยุทธ์ต่างๆ กับต้นทุนสะสม ( 💡 แตะที่ชื่อกราฟด้านล่างเพื่อเปิด/ปิดเส้นกราฟ )</div>
-                <canvas id="myChart" height="120"></canvas>
+                <div class="text-[10px] sm:text-xs text-slate-400 mb-4 flex items-center gap-1">
+                    <span>💡</span> แตะที่ชื่อกราฟด้านล่างเพื่อ ซ่อน/แสดง เส้นกราฟ
+                </div>
+                <!-- 🌟 ล็อกความสูงเพื่อป้องกันกราฟเพี้ยน/ยืด -->
+                <div class="relative w-full h-[250px] md:h-[350px]">
+                    <canvas id="myChart"></canvas>
+                </div>
             </div>
 
             <!-- Banner โปรโมท -->
-            <div class="mt-6 mb-8 text-center bg-indigo-50 border border-indigo-100 rounded-xl p-4 transition hover:bg-indigo-100">
+            <div class="text-center bg-indigo-50 border border-indigo-100 rounded-xl p-4 transition hover:bg-indigo-100 shadow-sm mb-4">
                 <a href="https://reddogboy.github.io/lottery-kitchenruay-website/" target="_blank" rel="noopener noreferrer" class="block">
-                    <div class="text-indigo-800 font-bold text-sm">👾 ลองเล่นโปรแกรมจำลองและคำนวณอย่างอื่นได้ที่นี่</div>
-                    <div class="text-indigo-500 text-xs mt-1">คลิกเพื่อเปิด KitchenRuay Lottery Simulator</div>
+                    <div class="text-indigo-800 font-bold text-sm md:text-base">👾 ลองเล่นโปรแกรมจำลองและคำนวณอย่างอื่นได้ที่นี่</div>
+                    <div class="text-indigo-500 text-xs md:text-sm mt-1">คลิกเพื่อเปิด KitchenRuay Lottery Simulator</div>
                 </a>
             </div>
 
         </div>
     </div>
 
+    <!-- 🌟 Pop-up Modal สำหรับเลือกปี -->
+    <div id="yearModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl p-5 w-[90%] max-w-sm transform scale-95 transition-transform duration-300" id="yearModalContent">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-lg text-slate-800">เลือกปีที่เริ่มลงทุน</h3>
+                <button onclick="closeYearModal()" class="text-slate-400 hover:text-red-500 font-bold text-2xl leading-none">&times;</button>
+            </div>
+            
+            <!-- ปุ่มปีจะถูกสร้างที่นี่ -->
+            <div id="modalYearGrid" class="grid grid-cols-3 gap-3 mb-6 max-h-64 overflow-y-auto pr-1"></div>
+            
+            <button onclick="closeYearModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 rounded-xl transition">
+                ปิดหน้าต่าง
+            </button>
+        </div>
+    </div>
+
     <!-- Logic System -->
     <script>
-        // 1. ตัวแปรเก็บข้อมูล
+        // 1. Data Store
         let globalVooData = [];
         let chartInstance = null;
-        let selectedYear = '2015'; // ค่าเริ่มต้น
+        let selectedYear = '2015'; // Default
         
         // 2. Constants & Settings
         const INFLATION_RATE = 0.03; // เงินเฟ้อ 3% ต่อปี
@@ -139,77 +173,104 @@
             cash: '#94A3B8'       // เทา
         };
 
-        // 3. ฟังก์ชัน Format
+        // 3. Formatters
         const fmtNum = (n) => Math.round(n).toLocaleString("en-US");
         const fmtTHB = (n) => "฿" + fmtNum(n);
         const fmtSign = (n) => (n > 0 ? "+" : "") + fmtNum(n);
 
-        // 4. การจัดการ Input ตัวเลข (ดักลูกน้ำ)
+        // 4. การจัดการ Input (ใส่ลูกน้ำอัตโนมัติ)
         const inputEl = document.getElementById('monthlyInput');
         inputEl.addEventListener('input', function(e) {
-            let val = e.target.value.replace(/[^0-9]/g, ''); // เอาเฉพาะตัวเลข
+            let val = e.target.value.replace(/[^0-9]/g, '');
             if (val === '') val = '0';
             e.target.value = fmtNum(parseInt(val));
             updateUI();
         });
 
-        function addDca(amount) {
+        function addAmount(amount) {
             let current = parseInt(inputEl.value.replace(/,/g, '')) || 0;
             inputEl.value = fmtNum(current + amount);
             updateUI();
+        }
+
+        // ฟังก์ชันล้างค่า (Clear Input)
+        function clearInput() {
+            inputEl.value = '0';
+            updateUI();
+            inputEl.focus(); // ให้ Cursor กลับไปกะพริบรอพิมพ์ต่อ
         }
 
         function getMonthlyDCA() {
             return parseInt(inputEl.value.replace(/,/g, '')) || 0;
         }
 
-        // 5. สร้างปุ่มแคปซูลเลือกปีแบบ Dynamic
-        function renderYearPills() {
-            const container = document.getElementById('yearPillsContainer');
-            const currentYear = new Date().getFullYear() - 1; // อัปเดตปีล่าสุดให้อัตโนมัติ (ปลอดภัยสุดคือปีก่อนหน้า)
+        // 5. ระบบ Pop-up Modal สำหรับเลือกปี
+        function initYearModal() {
+            const grid = document.getElementById('modalYearGrid');
+            const currentYear = new Date().getFullYear();
+            const maxYear = currentYear - 1; // ล็อกให้เลือกได้ถึงแค่ปีก่อนหน้า
             
             let html = '';
-            for (let y = 2015; y <= currentYear; y++) {
+            for (let y = 2015; y <= maxYear; y++) {
                 const isActive = y.toString() === selectedYear;
                 html += `
                     <button onclick="changeYear('${y}')" 
-                        class="px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-colors border
-                        ${isActive ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}">
+                        class="py-3 rounded-xl text-sm font-bold transition-all border
+                        ${isActive ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:bg-blue-50 hover:border-blue-300'}">
                         ${y}
                     </button>
                 `;
             }
-            container.innerHTML = html;
+            grid.innerHTML = html;
+            document.getElementById('yearDisplayBtn').innerText = selectedYear;
+        }
+
+        function openYearModal() {
+            initYearModal();
+            const modal = document.getElementById('yearModal');
+            const content = document.getElementById('yearModalContent');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeYearModal() {
+            const modal = document.getElementById('yearModal');
+            const content = document.getElementById('yearModalContent');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
         }
 
         function changeYear(year) {
             selectedYear = year;
-            renderYearPills();
+            closeYearModal();
+            document.getElementById('yearDisplayBtn').innerText = selectedYear;
             updateUI();
         }
 
-        // 6. โหลดข้อมูล JSON ที่เกิดจาก GitHub Actions
-        async function fetchRealData() {
+        // 6. ดึงข้อมูลจากไฟล์ JSON ที่ GitHub Actions สร้างไว้
+        async function fetchJSONData() {
             try {
-                // โหลดไฟล์ voo_data.json ที่วางอยู่โฟลเดอร์เดียวกับ HTML
-                // ใส่ timestamp ป้องกัน Browser แคชไฟล์เก่า
                 const response = await fetch(`./voo_data.json?t=${new Date().getTime()}`); 
-                if (!response.ok) throw new Error("Data not found");
+                if (!response.ok) throw new Error("JSON fetch failed");
                 
                 const data = await response.json();
                 
-                // ข้อมูลถูก Sort มาแล้วจาก Python แต่ Sort ซ้ำเพื่อความชัวร์ 100%
+                // บังคับเรียงวันที่ให้เป๊ะ (แกน X จะได้ไม่เพี้ยน)
                 globalVooData = data.sort((a, b) => a.date.localeCompare(b.date));
                 
-                renderYearPills();
-                
-                // สลับ UI ปิดกล่องโหลด เปิดหน้าเว็บหลัก
                 document.getElementById('stateContainer').style.display = 'none';
                 document.getElementById('mainContent').classList.remove('hidden');
                 
+                initYearModal();
                 updateUI();
             } catch (error) {
-                console.error("Fetch Error:", error);
+                console.error("Fetch Data Error:", error);
                 document.getElementById('loadingBox').classList.add('hidden');
                 document.getElementById('errorBox').classList.remove('hidden');
             }
@@ -226,17 +287,14 @@
             let pHigh = { shares: 0, cost: 0 };
             let pCash = { value: 0, cost: 0 };
 
-            // กรองข้อมูลให้เริ่มตั้งแต่ปีที่ผู้ใช้เลือก
             const filteredData = globalVooData.filter(d => d.date >= startYearStr + "-01");
 
             filteredData.forEach(d => {
-                // ทุ่มก้อนเดียวต้นปี
                 if (d.isFirstOfYear) {
                     pLump.shares += yearlyDca / d.open;
                     pLump.cost += yearlyDca;
                 }
                 
-                // DCA สายต่างๆ
                 pFirst.shares += monthlyDca / d.open;
                 pFirst.cost += monthlyDca;
 
@@ -246,7 +304,6 @@
                 pHigh.shares += monthlyDca / d.high;
                 pHigh.cost += monthlyDca;
 
-                // เงินสดฝังตุ่ม (หักเงินเฟ้อรายเดือน)
                 const monthlyInfl = INFLATION_RATE / 12;
                 pCash.value = (pCash.value * (1 - monthlyInfl)) + monthlyDca;
                 pCash.cost += monthlyDca;
@@ -265,76 +322,78 @@
             return { history, totalCost: pFirst.cost };
         }
 
-        // 8. การวาด UI (อัปเดตตามค่าใหม่)
+        // 8. การวาด UI แบบกะทัดรัด (Compact Mobile View)
         function updateUI() {
             if (globalVooData.length === 0) return;
             
             const monthlyDca = getMonthlyDCA();
             const { history, totalCost } = runBacktest(monthlyDca, selectedYear);
             
-            if (history.length === 0) return; // ดัก Error ถ้าเลือกปีเกิน
+            if (history.length === 0) return;
             const last = history[history.length - 1];
 
             document.getElementById('chartTitle').innerText = `ต้นทุนสะสม: ${fmtTHB(totalCost)}`;
 
-            // สร้าง Array เพื่อทำการ Sort หาผู้ชนะ
             let results = [
-                { id: 'lumpSum', name: "ทุ่มก้อนเดียวต้นปี", val: last.lumpSum, c: C.lumpSum, desc: "เงินก้อนพร้อมตั้งแต่ ม.ค." },
-                { id: 'dcaLow', name: "ซื้อถูกสุดทุกเดือน", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะแบบพระเจ้า ซื้อจุดต่ำสุดเป๊ะๆ" },
-                { id: 'dcaFirst', name: "DCA ต้นเดือนปกติ", val: last.dcaFirst, c: C.dcaFirst, desc: "หลับตาหักบัญชีซื้อทุกวันที่ 1" },
-                { id: 'dcaHigh', name: "ซื้อยอดดอยทุกเดือน", val: last.dcaHigh, c: C.dcaHigh, desc: "คนซวยจัด ซื้อจุดแพงสุดตลอด" },
-                { id: 'cash', name: "เก็บเงินสดฝังตุ่ม", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุนเลย โดนเงินเฟ้อกัดกิน 3%/ปี" }
+                { id: 'lumpSum', name: "ทุ่มก้อนเดียวต้นปี", val: last.lumpSum, c: C.lumpSum, desc: "ก้อนใหญ่ ม.ค." },
+                { id: 'dcaLow', name: "ซื้อถูกสุด", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะแบบพระเจ้า" },
+                { id: 'dcaFirst', name: "DCA ปกติ", val: last.dcaFirst, c: C.dcaFirst, desc: "หักบัญชีทุกวันที่ 1" },
+                { id: 'dcaHigh', name: "ซื้อยอดดอย", val: last.dcaHigh, c: C.dcaHigh, desc: "ซวยจัด ซื้อแพงสุด" },
+                { id: 'cash', name: "เก็บเงินสด", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุน โดนเงินเฟ้อ" }
             ];
 
-            // Sort เรียงลำดับคนกำไรมากสุดไปน้อยสุด
             results.sort((a, b) => b.val - a.val);
 
-            // วาด Cards HTML
             let cardsHTML = '';
             results.forEach((r, idx) => {
                 const profit = r.val - totalCost;
                 const percent = totalCost > 0 ? (profit / totalCost) * 100 : 0;
-                const isWinner = idx === 0;
                 
-                // กำหนดคลาสสี (แดง/เขียว)
+                const isWinner = idx === 0;
                 const isLoss = profit < 0;
                 const profitColor = isLoss ? 'text-red-600' : 'text-green-600';
-                const bgTagColor = isLoss ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700';
+                
+                // 🌟 Logic การแบ่งคอลัมน์บนมือถือ: ผู้ชนะจะกางเต็มพื้นที่ (col-span-2) คนอื่นจะอยู่ครึ่งจอ (col-span-1)
+                const gridSpan = isWinner ? 'col-span-2 md:col-span-1' : 'col-span-1 md:col-span-1';
+                
+                // ปรับขนาดตัวหนังสือให้พอดีกับกรอบเล็กๆ บนมือถือ
+                const titleSize = isWinner ? 'text-sm' : 'text-[11px]';
+                const profitSize = isWinner ? 'text-2xl' : 'text-lg';
 
                 cardsHTML += `
-                    <div class="bg-white rounded-2xl p-4 relative flex flex-col justify-between ${isWinner ? 'winner-card' : 'border border-slate-100 shadow-sm'}">
-                        ${isWinner ? '<div class="absolute -top-3 -right-2 text-2xl drop-shadow-md">👑</div>' : ''}
+                    <div class="${gridSpan} bg-white rounded-xl p-3 relative flex flex-col justify-between ${isWinner ? 'winner-card' : 'border border-slate-100 shadow-sm'}">
+                        ${isWinner ? '<div class="absolute -top-3 -right-2 text-2xl drop-shadow-md z-10" title="ผู้ชนะเลิศ">👑</div>' : ''}
                         
                         <div>
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="w-3 h-3 rounded-full" style="background-color: ${r.c}"></div>
-                                <div class="text-xs font-bold text-slate-700 leading-tight">${r.name}</div>
+                            <div class="flex items-center gap-1.5 mb-1.5">
+                                <div class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${r.c}"></div>
+                                <div class="${titleSize} font-bold text-slate-700 leading-tight truncate">${r.name}</div>
                             </div>
                             
-                            <div class="text-[10px] text-slate-400 mb-1 font-semibold uppercase tracking-wider">กำไร/ขาดทุน สุทธิ</div>
-                            <div class="text-2xl font-black ${profitColor} mb-1 tracking-tight">
+                            <div class="text-[9px] text-slate-400 mb-0.5 font-semibold uppercase tracking-wider">${isWinner ? 'กำไร/ขาดทุน สุทธิ' : 'กำไร/ขาดทุน'}</div>
+                            <div class="${profitSize} font-black ${profitColor} mb-1 tracking-tight truncate">
                                 ${fmtSign(profit)}
                             </div>
-                            <div class="inline-block px-2 py-0.5 rounded ${bgTagColor} text-xs font-bold mb-4">
+                            <div class="inline-block px-1.5 py-0.5 rounded ${isLoss ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'} text-[10px] font-bold mb-2">
                                 ${percent > 0 ? '+' : ''}${percent.toFixed(2)}%
                             </div>
                         </div>
 
-                        <div class="pt-3 border-t border-slate-50">
-                            <div class="text-xs text-slate-500">มูลค่าพอร์ต: <span class="font-bold text-slate-800 text-sm">${fmtNum(r.val)}</span></div>
-                            <div class="text-[10px] text-slate-400 mt-1 leading-snug">(${r.desc})</div>
+                        <div class="pt-2 border-t border-slate-50">
+                            <div class="text-[10px] text-slate-500">พอร์ต: <span class="font-bold text-slate-800 text-xs">${fmtNum(r.val)}</span></div>
+                            <div class="text-[9px] text-slate-400 mt-0.5 leading-snug truncate">(${r.desc})</div>
                         </div>
                     </div>
                 `;
             });
             document.getElementById('summaryCards').innerHTML = cardsHTML;
 
-            // วาด Chart.js
+            // วาด Chart
             const labels = history.map(h => h.date);
             const datasets = [
                 { label: 'ทุ่มก้อนเดียวต้นปี', data: history.map(h => h.lumpSum), borderColor: C.lumpSum, fill: false, tension: 0.1, pointRadius: 0 },
-                { label: 'DCA ต้นเดือนปกติ', data: history.map(h => h.dcaFirst), borderColor: C.dcaFirst, fill: false, tension: 0.1, pointRadius: 0 },
                 { label: 'ซื้อถูกสุดทุกเดือน', data: history.map(h => h.dcaLow), borderColor: C.dcaLow, fill: false, tension: 0.1, pointRadius: 0 },
+                { label: 'DCA ต้นเดือนปกติ', data: history.map(h => h.dcaFirst), borderColor: C.dcaFirst, fill: false, tension: 0.1, pointRadius: 0 },
                 { label: 'ซื้อยอดดอยทุกเดือน', data: history.map(h => h.dcaHigh), borderColor: C.dcaHigh, fill: false, tension: 0.1, pointRadius: 0 },
                 { label: 'เก็บเงินสดฝังตุ่ม', data: history.map(h => h.cashValue), borderColor: C.cash, fill: false, tension: 0.1, pointRadius: 0 },
                 { label: 'ต้นทุนสะสม', data: history.map(h => h.cost), borderColor: '#CBD5E1', borderDash: [4,4], fill: false, tension: 0, pointRadius: 0 }
@@ -351,15 +410,15 @@
                     data: { labels, datasets },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false, // 🌟 ปลดล็อกให้ Chart ไม่บิดเบี้ยว ยืดตาม Div แม่
                         interaction: { mode: 'index', intersect: false },
                         scales: { 
                             y: { 
                                 ticks: { 
-                                    // Smart Dynamic Y-Axis (ไม่ค้างที่ 0.0M ถ้าเงินน้อย)
                                     callback: function(val) { 
                                         if (val >= 1000000) return "฿" + (val/1000000).toFixed(1) + "M"; 
                                         if (val >= 10000) return "฿" + (val/1000).toFixed(0) + "k";
-                                        return "฿" + val;
+                                        return "฿" + val.toLocaleString();
                                     } 
                                 },
                                 grid: { color: '#F1F5F9' },
@@ -368,7 +427,7 @@
                             x: {
                                 grid: { display: false },
                                 border: { display: false },
-                                ticks: { color: '#94A3B8', maxTicksLimit: 8 }
+                                ticks: { color: '#94A3B8', maxTicksLimit: 6 } // ลดจำนวนป้ายแกน x บนมือถือ
                             }
                         },
                         plugins: { 
@@ -379,13 +438,13 @@
                                     } 
                                 },
                                 backgroundColor: '#1E293B',
-                                titleFont: { size: 13 },
-                                bodyFont: { size: 12 },
+                                titleFont: { size: 12 },
+                                bodyFont: { size: 11 },
                                 padding: 10,
                                 cornerRadius: 8
                             },
                             legend: {
-                                labels: { boxWidth: 12, usePointStyle: true, font: { size: 11 } }
+                                labels: { boxWidth: 10, usePointStyle: true, font: { size: 10 } }
                             }
                         }
                     }
@@ -393,8 +452,28 @@
             }
         }
 
-        // เริ่มต้นการทำงาน (เรียกข้อมูลจาก JSON)
-        fetchRealData();
+        // เริ่มโหลดข้อมูล
+        fetchJSONData();
     </script>
 </body>
 </html>
+```eof
+
+### 👨‍💻 สรุปการปรับปรุงสถาปัตยกรรม (UX Improvements)
+
+1. **เปลี่ยน Layout เป็น Grid 2 คอลัมน์ (Compact Mobile View):** 
+   - อันนี้คือเคล็ดลับเลยครับ! ใน CSS ผมใส่ `grid-cols-2` ให้กับมือถือ และใช้ลอจิก `isWinner ? 'col-span-2' : 'col-span-1'`
+   - ผลลัพธ์คือ: ผู้ชนะจะแผ่เต็มบรรทัดแรกอย่างยิ่งใหญ่ (ติดมงกุฎ) ส่วนอีก 4 กลยุทธ์ที่เหลือจะถูกหดย่อส่วนแล้วจัดเรียงเป็น 2 คอลัมน์ด้านล่าง ทำให้คุณเปรียบเทียบตัวเลขทั้ง 5 กล่องได้ในชั่วพริบตา โดยไม่ต้องใช้นิ้วไถหน้าจอลงไปลึกๆ อีกต่อไปครับ!
+2. **Pop-up เลือกปีสุดคลีน (Year Modal):**
+   - ผมเขียนโค้ดซ่อน Modal ไว้เป็น `z-50` สีดำโปร่งแสง เมื่อกดปุ่มเลือกปี มันจะเด้งขึ้นมาตรงกลางจอ
+   - ระบบจะรู้ทันทีว่าตอนนี้ปี ค.ศ. อะไร และจะสร้างปุ่มปี 2015 จนถึง "ปีก่อนหน้า" (Current Year - 1) ให้โดยอัตโนมัติ (Dynamic UI) อนาคตไม่ต้องมาแก้โค้ดเพิ่มปีเองแล้วครับ
+3. **ปุ่ม ✖ ล้างค่าเงิน (Input Clear Button):**
+   - ผมฝังปุ่มกากบาทตัวเล็กๆ ไว้ด้านขวาของช่องกรอกตัวเลข เมื่อผู้ใช้กดปุ่มนี้ ระบบจะสั่งให้ Input กลับไปเป็น '0' ทันที และมีการสั่ง `.focus()` เพื่อให้คีย์บอร์ดมือถือเด้งรอให้ผู้ใช้พิมพ์ตัวเลขใหม่ได้เลยครับ (ลด Friction ในการใช้งาน)
+4. **ล็อกทรงกราฟไม่ให้เบี้ยว (Prevent Chart Distortion):**
+   - ผมเพิ่มพารามิเตอร์ศักดิ์สิทธิ์ของ Chart.js คือ `maintainAspectRatio: false` และบังคับความสูงของกรอบกราฟไว้ที่ `h-[250px]` (มือถือ) และ `h-[350px]` (คอม) 
+   - ไม่ว่าคุณจะเปิดด้วยไอโฟนจอเล็ก หรือไอแพดจอใหญ่ กราฟจะสวยงามสมส่วน ไม่โดนบีบจนแบนติดพื้นแน่นอนครับ
+
+ก๊อปปี้ไปวางในโปรเจกต์ `VOO Backtest` ได้เลยครับ หน้าตาบนมือถือจะดูพรีเมียมขึ้นอีกระดับแน่นอน! ติดขัดตรงไหนบอกได้เสมอครับ
+<ElicitationsGroup message="Talk about this with Gemini Live">
+<Elicitation label="Try a real-time voice conversation" query="Try a real-time voice conversation" query_intent="OPEN_LIVE_MODE" />
+</ElicitationsGroup>

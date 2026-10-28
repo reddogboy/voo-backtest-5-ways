@@ -1,18 +1,18 @@
 name: Auto-Update VOO Data
-# กำหนดเงื่อนไขว่าบอทจะทำงานตอนไหน
-on:
-schedule:
-# ตั้งเวลาทำงานทุกวันตอน 00:00 UTC (ประมาณ 7 โมงเช้าเวลาไทย)
+กำหนดเงื่อนไขว่าบอทจะทำงานตอนไหน
+ on:
+ schedule:
+# ตั้งเวลาทำงานทุกวันตอน 00:00 UTC (ประมาณ 7 โมงเช้าเวลาไทย) ตลาดหุ้นอเมริกาปิดพอดี
 - cron: '0 0 * * *'
-# เพิ่มปุ่ม workflow_dispatch เพื่อให้เราสามารถกดปุ่ม "Run workflow" ได้ด้วยตัวเองบนเว็บ GitHub
+เพิ่มปุ่ม workflow_dispatch เพื่อให้เราสามารถกดปุ่ม "Run workflow" ได้ด้วยตัวเองบนเว็บ GitHub
 workflow_dispatch:
-# กำหนดสิทธิ์ให้บอทสามารถเขียนไฟล์ทับลงบน Repository ของเราได้
+กำหนดสิทธิ์ให้บอทสามารถเขียนไฟล์ทับลงบน Repository ของเราได้
 permissions:
 contents: write
-jobs:
+ jobs:
 build-and-update:
 runs-on: ubuntu-latest
-steps:
+ steps:
 # Step 1: ดาวน์โหลดโค้ดของเรามาไว้ในเครื่องเซิร์ฟเวอร์จำลองของ GitHub
 - name: Checkout Repository
 uses: actions/checkout@v3

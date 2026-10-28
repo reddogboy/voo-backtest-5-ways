@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุน 10 ปี</title>
+    <title>VOO DCA Backtest | พิสูจน์กลยุทธ์การลงทุน</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -344,11 +344,11 @@
             document.getElementById('chartTitle').innerText = `ต้นทุนสะสม: ${fmtTHB(totalCost)}`;
 
             let results = [
-                { id: 'lumpSum', name: "ทุ่มก้อนเดียวต้นปี", val: last.lumpSum, c: C.lumpSum, desc: "ก้อนใหญ่รอบเดียวใน ม.ค." },
-                { id: 'dcaLow', name: "ซื้อถูกสุดทุกเดือน", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะซื้อตอนถูกที่สุด" },
-                { id: 'dcaFirst', name: "DCA ต้นเดือน", val: last.dcaFirst, c: C.dcaFirst, desc: "หลับตาหักบัญชีตอนต้นเดือน" },
-                { id: 'dcaHigh', name: "ซื้อแพงสุดทุกเดือน", val: last.dcaHigh, c: C.dcaHigh, desc: "ซวยจัด ซื้อตอนแพงที่สุด" },
-                { id: 'cash', name: "เก็บเงินสดไว้เฉย ๆ", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุน โดนเงินเฟ้อกิน" }
+                { id: 'lumpSum', name: "Lump Sum 💥", val: last.lumpSum, c: C.lumpSum, desc: "ทุ่มก้อนใหญ่ทีเดียวทุกต้นปี" },
+                { id: 'dcaLow', name: "Buy Low 🤩", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะ ซื้อตอนถูกที่สุดทุกเดือน" },
+                { id: 'dcaFirst', name: "DCA 🌱", val: last.dcaFirst, c: C.dcaFirst, desc: "ลงทุนวันแรกของทุกเดือน" },
+                { id: 'dcaHigh', name: "Buy High 🏔️", val: last.dcaHigh, c: C.dcaHigh, desc: "ซวยจัด ซื้อตอนแพงที่สุดทุกเดือน" },
+                { id: 'cash', name: "Cash 💸", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุน โดนเงินเฟ้อกิน" }
             ];
 
             results.sort((a, b) => b.val - a.val);

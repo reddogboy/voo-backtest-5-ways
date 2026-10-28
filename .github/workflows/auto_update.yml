@@ -1,12 +1,12 @@
 name: Auto-Update VOO Data
-กำหนดเงื่อนไขว่าบอทจะทำงานตอนไหน
+# กำหนดเงื่อนไขว่าบอทจะทำงานตอนไหน
 on:
 schedule:
-# ตั้งเวลาทำงานทุกวันตอน 00:00 UTC (ประมาณ 7 โมงเช้าเวลาไทย) ตลาดหุ้นอเมริกาปิดพอดี
+# ตั้งเวลาทำงานทุกวันตอน 00:00 UTC (ประมาณ 7 โมงเช้าเวลาไทย)
 - cron: '0 0 * * *'
-เพิ่มปุ่ม workflow_dispatch เพื่อให้เราสามารถกดปุ่ม "Run workflow" ได้ด้วยตัวเองบนเว็บ GitHub
+# เพิ่มปุ่ม workflow_dispatch เพื่อให้เราสามารถกดปุ่ม "Run workflow" ได้ด้วยตัวเองบนเว็บ GitHub
 workflow_dispatch:
-กำหนดสิทธิ์ให้บอทสามารถเขียนไฟล์ทับลงบน Repository ของเราได้
+# กำหนดสิทธิ์ให้บอทสามารถเขียนไฟล์ทับลงบน Repository ของเราได้
 permissions:
 contents: write
 jobs:
@@ -35,5 +35,4 @@ run: |
 git config --global user.name 'github-actions[bot]'
 git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 git add voo_data.json
-# ถ้าไฟล์มีข้อมูลใหม่ ให้ Commit, แต่ถ้าวันนี้ตลาดปิดไม่มีข้อมูลใหม่ ให้ข้ามไป (ไม่พัง)
 git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Auto-update VOO data [$(date +'%Y-%m-%d')]" && git push)

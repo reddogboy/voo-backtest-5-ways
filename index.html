@@ -119,7 +119,7 @@
                 </div>
             </div>
 
-            <!-- 🌟 NEW: กล่อง Insight สรุปผลลัพธ์แบบเล่าเรื่อง (เติมเต็มพื้นที่ว่างอย่างเกิดประโยชน์) -->
+            <!-- กล่อง Insight สรุปผลลัพธ์แบบเล่าเรื่อง -->
             <div id="insightBox" class="hidden bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4 md:p-5 mb-5 shadow-sm text-slate-700 transition-all duration-500">
                 <!-- เนื้อหาจะถูกแทรกด้วย JavaScript -->
             </div>
@@ -398,13 +398,12 @@
             if (history.length === 0) return;
             const last = history[history.length - 1];
 
-            // สร้าง Array เพื่อทำการ Sort
             let results = [
                 { id: 'lumpSum', name: "Lump Sum 💥", val: last.lumpSum, c: C.lumpSum, desc: "ทุ่มก้อนใหญ่ซื้อทีเดียวทุกต้นปี" },
                 { id: 'dcaLow', name: "Buy Low 🤩", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะ ซื้อตอนถูกที่สุดทุกเดือน" },
                 { id: 'dcaFirst', name: "DCA ต้นเดือน 🌱", val: last.dcaFirst, c: C.dcaFirst, desc: "ลงทุนวันแรกของทุกเดือน" },
                 { id: 'dcaHigh', name: "Buy High 🏔️", val: last.dcaHigh, c: C.dcaHigh, desc: "ซวยจัด ซื้อตอนแพงที่สุดทุกเดือน" },
-                { id: 'cash', name: "Cash 💸", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุน โดนเงินเฟ้อกิน" }
+                { id: 'cash', name: "Cash 💸", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุน โดนเงินเฟ้อกิน 3% ทุกปี" }
             ];
 
             results.sort((a, b) => b.val - a.val);
@@ -414,7 +413,7 @@
             const currentYear = new Date().getFullYear();
             const yearsDiff = currentYear - parseInt(selectedYear);
 
-            // 🌟 สร้าง Narrative Insight (สรุปผลแบบเล่าเรื่อง เพื่ออุดช่องว่างอย่างมีประโยชน์)
+            // Insight Box
             const insightBox = document.getElementById('insightBox');
             if(totalCost > 0) {
                 insightBox.innerHTML = `
@@ -437,19 +436,25 @@
                 insightBox.classList.add('hidden');
             }
 
-            // วาด Cards
+            // 🌟 วาด Cards พร้อมเปลี่ยนข้อความเฉพาะ "เงินสด" ให้เข้าใจง่าย (Money Illusion Fix)
             let cardsHTML = '';
             results.forEach((r, idx) => {
                 const profit = r.val - totalCost;
                 const percent = totalCost > 0 ? (profit / totalCost) * 100 : 0;
                 
                 const isWinner = idx === 0;
+                const isCash = r.id === 'cash'; // ตรวจสอบว่าใช่การ์ดเงินสดหรือไม่
                 const isLoss = profit < 0;
-                const profitColor = isLoss ? 'text-red-600' : 'text-green-600';
                 
+                const profitColor = isLoss ? 'text-red-600' : 'text-green-600';
                 const gridSpan = isWinner ? 'col-span-2 md:col-span-1' : 'col-span-1 md:col-span-1';
                 const titleSize = isWinner ? 'text-base' : 'text-xs';
                 const profitSize = isWinner ? 'text-3xl' : 'text-xl';
+                
+                // UX Copywriting: ปรับคำให้ตรงกับ Mental Model ของผู้ใช้
+                const profitLabel = isCash ? 'อำนาจซื้อที่หายไป (เงินเฟ้อ)' : (isWinner ? 'กำไร/ขาดทุน สุทธิ' : 'กำไร/ขาดทุน');
+                const portLabel = isCash ? 'มูลค่าที่แท้จริง' : 'พอร์ต';
+                const descText = isCash ? `เงินต้น ฿${fmtNum(totalCost)} อยู่ครบ แต่ซื้อของได้น้อยลง` : r.desc;
 
                 cardsHTML += `
                     <div class="${gridSpan} bg-white rounded-xl p-3 sm:p-4 relative flex flex-col justify-between ${isWinner ? 'winner-card' : 'border border-slate-100 shadow-sm'}">
@@ -461,7 +466,7 @@
                                 <div class="${titleSize} font-bold text-slate-700 leading-tight truncate">${r.name}</div>
                             </div>
                             
-                            <div class="text-[10px] text-slate-400 mb-0.5 font-semibold uppercase tracking-wider">${isWinner ? 'กำไร/ขาดทุน สุทธิ' : 'กำไร/ขาดทุน'}</div>
+                            <div class="text-[9px] text-slate-400 mb-0.5 font-semibold uppercase tracking-wider line-clamp-1" title="${profitLabel}">${profitLabel}</div>
                             <div class="${profitSize} font-black ${profitColor} mb-1 tracking-tight truncate">
                                 ${fmtSign(profit)}
                             </div>
@@ -471,8 +476,8 @@
                         </div>
 
                         <div class="pt-2 border-t border-slate-50">
-                            <div class="text-[11px] text-slate-500">พอร์ต: <span class="font-bold text-slate-800 text-sm">${fmtNum(r.val)}</span></div>
-                            <div class="text-[10px] text-slate-400 mt-0.5 leading-snug truncate">(${r.desc})</div>
+                            <div class="text-[11px] text-slate-500">${portLabel}: <span class="font-bold text-slate-800 text-sm">${fmtNum(r.val)}</span></div>
+                            <div class="text-[9px] text-slate-400 mt-0.5 leading-snug truncate" title="${descText}">(${descText})</div>
                         </div>
                     </div>
                 `;

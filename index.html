@@ -132,7 +132,7 @@
             <div class="text-center bg-indigo-50 border border-indigo-100 rounded-xl p-4 transition hover:bg-indigo-100 shadow-sm mb-4">
                 <a href="https://reddogboy.github.io/lottery-kitchenruay-website/" target="_blank" rel="noopener noreferrer" class="block">
                     <div class="text-indigo-800 font-bold text-sm md:text-base">👾 ลองเล่นโปรแกรมจำลองและคำนวณอย่างอื่นได้ที่นี่</div>
-                    <div class="text-indigo-500 text-xs md:text-sm mt-1">คลิกเพื่อเปิด KitchenRuay Lottery Simulator</div>
+                    <div class="text-indigo-500 text-xs md:text-sm mt-1">คลิกเพื่อเปิด 👉🏻 https://reddogboy.github.io/lottery-kitchenruay-website/</div>
                 </a>
             </div>
 
@@ -335,11 +335,11 @@
             document.getElementById('chartTitle').innerText = `ต้นทุนสะสม: ${fmtTHB(totalCost)}`;
 
             let results = [
-                { id: 'lumpSum', name: "ทุ่มก้อนเดียวต้นปี", val: last.lumpSum, c: C.lumpSum, desc: "ก้อนใหญ่ ม.ค." },
-                { id: 'dcaLow', name: "ซื้อถูกสุด", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะแบบพระเจ้า" },
-                { id: 'dcaFirst', name: "DCA ปกติ", val: last.dcaFirst, c: C.dcaFirst, desc: "หักบัญชีทุกวันที่ 1" },
-                { id: 'dcaHigh', name: "ซื้อยอดดอย", val: last.dcaHigh, c: C.dcaHigh, desc: "ซวยจัด ซื้อแพงสุด" },
-                { id: 'cash', name: "เก็บเงินสด", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุน โดนเงินเฟ้อ" }
+                { id: 'lumpSum', name: "ทุ่มก้อนเดียวตั้งแต่ต้นปี 💥", val: last.lumpSum, c: C.lumpSum, desc: "ก้อนใหญ่ครั้งเดียวในวันแรกของแต่ละปี" },
+                { id: 'dcaLow', name: "ซื้อถูกสุด 🤩", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะซื้อที่จุดถูกสุดของทุกเดือนแบบพระเจ้า" },
+                { id: 'dcaFirst', name: "DCA ปกติ 🌱", val: last.dcaFirst, c: C.dcaFirst, desc: "หักบัญชีทุกวันที่ 1 ของแต่ละเดือน" },
+                { id: 'dcaHigh', name: "ซื้อยอดดอย 🏔️", val: last.dcaHigh, c: C.dcaHigh, desc: "ซวยจัด ซื้อที่ราคาแพงสุดของแต่ละเดือน" },
+                { id: 'cash', name: "เก็บเงินสด 💸", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุน โดนเงินเฟ้อกิน" }
             ];
 
             results.sort((a, b) => b.val - a.val);

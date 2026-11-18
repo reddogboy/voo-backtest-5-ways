@@ -53,7 +53,7 @@
         <!-- Header -->
         <div class="text-center mb-6 mt-2">
             <h1 class="text-2xl md:text-3xl font-black mb-1">$VOO DCA Backtest 🇺🇸</h1>
-            <p class="text-slate-500 text-xs md:text-base">กลยุทธ์ไหนสร้างกำไรได้ดีที่สุดในระยะยาว by Jake the Red Dog</p>
+            <p class="text-slate-500 text-xs md:text-base">เปรียบเทียบกลยุทธ์ 4 วิธีในการลงทุนในดัชนี S&P 500 ($VOO) เทียบกับการเก็บเงินไว้เฉยๆ วิธีไหนสร้างกำไรได้ดีที่สุดในระยะยาว by Jake the Red Dog</p>
         </div>
 
         <!-- System States (Loading & Error) -->
@@ -454,7 +454,7 @@
                 // UX Copywriting: ปรับคำให้ตรงกับ Mental Model ของผู้ใช้
                 const profitLabel = isCash ? 'อำนาจซื้อที่หายไป (เงินเฟ้อ)' : (isWinner ? 'กำไร/ขาดทุน สุทธิ' : 'กำไร/ขาดทุน');
                 const portLabel = isCash ? 'มูลค่าที่แท้จริง' : 'พอร์ต';
-                const descText = isCash ? `เงินต้น ฿${fmtNum(totalCost)} อยู่ครบ แต่ซื้อของได้น้อยลง` : r.desc;
+                const descText = isCash ? `เงินต้นอยู่ครบ แต่ซื้อของได้น้อยลง` : r.desc;
 
                 cardsHTML += `
                     <div class="${gridSpan} bg-white rounded-xl p-3 sm:p-4 relative flex flex-col justify-between ${isWinner ? 'winner-card' : 'border border-slate-100 shadow-sm'}">

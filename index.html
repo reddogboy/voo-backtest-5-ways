@@ -23,9 +23,9 @@
         /* ซ่อนลูกศรขึ้น/ลงในช่องกรอกตัวเลข */
         input[type="text"] { font-variant-numeric: tabular-nums; }
         
-        /* บังคับฟอนต์ 16px บนมือถือเพื่อป้องกัน iOS Auto-Zoom */
+        /* 🌟 บังคับฟอนต์ 16px บนมือถือเพื่อป้องกัน iOS Auto-Zoom */
         @media screen and (max-width: 768px) {
-            input[type="text"], button, select {
+            input[type="text"], select {
                 font-size: 16px !important;
             }
         }
@@ -38,15 +38,12 @@
             background: linear-gradient(to bottom right, #ffffff, #fefce8);
         }
 
-        /* Modal Overlay สำหรับ Pop-up */
-        .modal-overlay {
-            background-color: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
+        /* ซ่อนลูกศรของ Select เดิม เพื่อใช้ลูกศร Custom ของเราเอง */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
         }
-        
-        /* ซ่อน Scrollbar ของ Pop-up */
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="p-3 md:p-6 text-slate-800 pb-20">
@@ -56,7 +53,7 @@
         <!-- Header -->
         <div class="text-center mb-6 mt-2">
             <h1 class="text-2xl md:text-3xl font-black mb-1">📈 S&P 500 DCA Backtest by Jake the Red Dog </h1>
-            <p class="text-slate-500 text-xs md:text-base text-balance px-2">เปรียบเทียบ 4 กลยุทธ์ในการลงทุนในดัชนี S&P 500 ($VOO) เทียบกับการเก็บเงินไว้เฉยๆ วิธีไหนสร้างกำไรได้ดีที่สุดในระยะยาว</p>
+            <p class="text-slate-500 text-xs md:text-base px-2">เปรียบเทียบ 4 กลยุทธ์ในการลงทุนในดัชนี S&P 500 ($VOO) เทียบกับการเก็บเงินไว้เฉยๆ วิธีไหนสร้างกำไรได้ดีที่สุดในระยะยาว</p>
         </div>
 
         <!-- System States (Loading & Error) -->
@@ -94,29 +91,29 @@
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 font-bold text-lg">฿</span>
                             <input type="text" inputmode="numeric" id="monthlyInput" value="2,000" 
                                 class="w-full pl-8 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-lg font-black text-slate-700 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all text-[16px] md:text-xl">
-                            <!-- 🌟 ปุ่มกากบาทล้างค่า (Clear) -->
-                            <button onclick="clearInput()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-red-500 transition-colors" title="ล้างข้อมูล">
+                            <!-- ปุ่มกากบาทล้างค่า (Clear) -->
+                            <button onclick="clearInput()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-red-500 transition-colors">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 fill-current" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
                             </button>
                         </div>
                         <div class="flex gap-2 mt-3">
-                            <button onclick="addAmount(1000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition transform active:scale-95">+1,000</button>
-                            <button onclick="addAmount(10000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition transform active:scale-95">+10,000</button>
-                            <button onclick="addAmount(50000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition transform active:scale-95">+50,000</button>
+                            <button onclick="addAmount(100)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+100</button>
+                            <button onclick="addAmount(1000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+1,000</button>
+                            <button onclick="addAmount(10000)" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold py-2 rounded-md transition">+10,000</button>
                         </div>
                     </div>
 
-                    <!-- 🌟 ส่วนเลือกปีเริ่มต้น (ปรับเป็นปุ่มเรียก Pop-up ให้นุ่มนวลขึ้น) -->
+                    <!-- ส่วนเลือกปีเริ่มต้น (🌟 ปรับปุ่มให้เป็นมิตร สบายตา และมี Affordance ชัดเจนขึ้น) -->
                     <div class="flex flex-col justify-center">
-                        <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">📅 ปีที่เริ่มลงทุน (ถึงปัจจุบัน)</label>
-                        <button onclick="openYearModal()" class="w-full bg-slate-100 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-slate-700 flex items-center justify-between px-5 py-4 rounded-lg transition-all shadow-sm group">
-                            <span class="text-sm font-semibold group-hover:text-blue-700 transition-colors">เริ่มต้นตั้งแต่ปี ค.ศ.</span>
-                            <div class="flex items-center gap-2">
-                                <span id="yearDisplayBtn" class="text-xl font-black text-blue-600">2015</span>
-                                <span class="text-slate-400 text-xs group-hover:text-blue-500">▼</span>
+                        <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">📅 ปีที่เริ่มลงทุน (และลงทุนต่อเนื่องถึงปัจจุบัน)</label>
+                        <div class="relative w-full">
+                            <select id="yearSelect" onchange="changeYear(this.value)" class="w-full bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-black px-5 py-4 rounded-lg transition-all shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 text-[16px] md:text-xl pl-6">
+                                <!-- Options จะถูกสร้างด้วย JavaScript -->
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-blue-500 font-bold">
+                                <span class="text-[10px] uppercase tracking-wider bg-white px-2 py-1 rounded-full shadow-sm border border-blue-100">แตะเปลี่ยนปี ▼</span>
                             </div>
-                        </button>
-                        <div class="text-[10px] text-slate-400 mt-2 text-right">แตะเพื่อเปลี่ยนปีเริ่มต้นการทดสอบ</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -126,20 +123,18 @@
                 <!-- เนื้อหาจะถูกแทรกด้วย JavaScript -->
             </div>
 
-            <!-- 🌟 Summary Cards (ปรับ Grid บนมือถือให้อ่านง่าย เปรียบเทียบง่าย) -->
-            <!-- grid-cols-2 ทำให้แบ่งเป็น 2 คอลัมน์บนมือถือ ทำให้ดูกระชับ ไม่ต้องเลื่อนเยอะ -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-2.5 sm:gap-3 mb-6" id="summaryCards"></div>
+            <!-- Summary Cards (Grid แนวนอนกะทัดรัดบนมือถือ) -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6" id="summaryCards"></div>
 
             <!-- Chart -->
-            <div class="bg-white rounded-xl p-3 md:p-6 shadow-sm border border-slate-100 mb-6">
+            <div class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-slate-100 mb-6">
                 <div class="flex justify-between items-end mb-2">
                     <h2 class="text-sm md:text-base font-bold text-slate-700">📈 กราฟเปรียบเทียบการเติบโตของพอร์ต</h2>
                 </div>
                 <div class="text-[10px] sm:text-xs text-slate-400 mb-4 flex items-center gap-1">
                     <span>💡</span> แตะที่ชื่อกราฟด้านล่างเพื่อ ซ่อน/แสดง เส้นกราฟ
                 </div>
-                <!-- 🌟 ล็อกความสูงและป้องกันกราฟเพี้ยน -->
-                <div class="relative w-full h-[280px] md:h-[400px]">
+                <div class="relative w-full h-[320px] md:h-[400px]">
                     <canvas id="myChart"></canvas>
                 </div>
             </div>
@@ -156,29 +151,10 @@
             <div class="text-center border-t border-slate-200 pt-6 pb-2 px-2">
                 <p class="text-[10px] sm:text-xs text-slate-400 leading-relaxed font-medium">
                     <strong class="text-slate-500">คำเตือน:</strong> ไม่ใช่คำแนะนำในการลงทุน การลงทุนมีความเสี่ยง ผู้ลงทุนควรศึกษาข้อมูลก่อนตัดสินใจลงทุน<br class="hidden md:block"> 
-                    ผลการดำเนินงานในอดีตไม่ได้เป็นสิ่งยืนยันถึงผลการดำเนินงานในอนาคต เว็บไซต์นี้เป็นเพียงการจำลองและคำนวณเพื่อเป็นแนวทางศึกษาเท่านั้น
+                    ผลการดำเนินงานในอดีตไม่ได้เป็นสิ่งยืนยันถึงผลการดำเนินงานในอนาคต เว็บไซต์นี้เป็นเพียงการคำนวณเพื่อเป็นแนวทางศึกษาเท่านั้น
                 </p>
             </div>
 
-        </div>
-    </div>
-
-    <!-- 🌟 Pop-up Modal สำหรับเลือกปี (ทำใหม่ให้นุ่มนวลขึ้น) -->
-    <div id="yearModal" class="fixed inset-0 modal-overlay flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
-        <div class="bg-white rounded-2xl shadow-2xl p-5 w-[90%] max-w-sm transform scale-95 transition-transform duration-300" id="yearModalContent">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-lg text-slate-800">เลือกปีที่เริ่มลงทุน</h3>
-                <button onclick="closeYearModal()" class="text-slate-400 hover:text-red-500 font-bold text-2xl leading-none transition-colors">&times;</button>
-            </div>
-            
-            <div class="text-xs text-slate-500 mb-3 text-center">ทดสอบเริ่มลงทุนตั้งแต่ปี ค.ศ. ต่อไปนี้จนถึงปัจจุบัน</div>
-            
-            <!-- ปุ่มปีจะถูกสร้างที่นี่ -->
-            <div id="modalYearGrid" class="grid grid-cols-3 gap-2 sm:gap-3 mb-6 max-h-72 overflow-y-auto hide-scrollbar"></div>
-            
-            <button onclick="closeYearModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-colors shadow-sm">
-                ปิดหน้าต่าง
-            </button>
         </div>
     </div>
 
@@ -197,8 +173,8 @@
             dcaLow: '#10B981',    // เขียว
             dcaFirst: '#EAB308',  // เหลือง
             dcaHigh: '#EF4444',   // แดง
-            cash: '#475569',      // เทาเข้ม/ดำ
-            cost: '#CBD5E1'       // เทาอ่อน (ต้นทุน)
+            cash: '#475569',      // เทาเข้ม/ดำ (เก็บเงินสดไว้เฉยๆ)
+            cost: '#CBD5E1'       // เทาอ่อน (ต้นทุนสะสม)
         };
 
         // 3. Formatters
@@ -206,10 +182,27 @@
         const fmtTHB = (n) => "฿" + fmtNum(n);
         const fmtSign = (n) => (n > 0 ? "+" : "") + fmtNum(n);
         
+        // Formatter สำหรับกราฟ (ย่อเป็น K, M)
         const compactNum = (val) => {
             if (val >= 1000000) return (val / 1000000).toFixed(2) + "M";
             if (val >= 1000) return (val / 1000).toFixed(2) + "K";
             return Math.round(val).toLocaleString();
+        };
+
+        // 🌟 NEW Formatter: สำหรับการ์ด (แปลงเป็น ล้าน, แสน แบบภาษาไทยเพื่อให้ตัวเลขไม่ล้นจอ)
+        const fmtThaiCompact = (n) => {
+            if (n === 0) return "0";
+            const isNeg = n < 0;
+            const absN = Math.abs(n);
+            const sign = isNeg ? "-" : "+";
+
+            if (absN >= 1000000) {
+                return sign + (absN / 1000000).toFixed(2) + " ล้าน";
+            } else if (absN >= 100000) {
+                return sign + (absN / 100000).toFixed(2) + " แสน";
+            } else {
+                return sign + Math.round(absN).toLocaleString("en-US");
+            }
         };
 
         // 4. การจัดการ Input (ใส่ลูกน้ำอัตโนมัติ)
@@ -227,64 +220,32 @@
             updateUI();
         }
 
-        // 🌟 ฟังก์ชันล้างค่า (Clear Input)
         function clearInput() {
             inputEl.value = '0';
             updateUI();
-            inputEl.focus(); // ให้เคอร์เซอร์กระพริบรอรับค่าใหม่
+            inputEl.focus();
         }
 
         function getMonthlyDCA() {
             return parseInt(inputEl.value.replace(/,/g, '')) || 0;
         }
 
-        // 5. 🌟 ระบบ Pop-up Modal สำหรับเลือกปี (ดีกว่า Wheel เพราะเห็นชัดกว่า)
-        function initYearModal() {
-            const grid = document.getElementById('modalYearGrid');
+        // 5. ระบบเลือกปีแบบล้อเลื่อน (Wheel Select)
+        function initYearSelect() {
+            const selectEl = document.getElementById('yearSelect');
             const currentYear = new Date().getFullYear();
             const maxYear = currentYear - 1; 
             
             let html = '';
             for (let y = 2015; y <= maxYear; y++) {
-                const isActive = y.toString() === selectedYear;
-                html += `
-                    <button onclick="changeYear('${y}')" 
-                        class="py-3 rounded-xl text-sm font-bold transition-all border
-                        ${isActive ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-blue-100 hover:border-blue-300'}">
-                        ${y}
-                    </button>
-                `;
+                const isSelected = y.toString() === selectedYear ? 'selected' : '';
+                html += `<option value="${y}" ${isSelected}>เริ่มปี ${y}</option>`;
             }
-            grid.innerHTML = html;
-            document.getElementById('yearDisplayBtn').innerText = selectedYear;
-        }
-
-        function openYearModal() {
-            initYearModal();
-            const modal = document.getElementById('yearModal');
-            const content = document.getElementById('yearModalContent');
-            modal.classList.remove('hidden');
-            // Allow display block to apply before fading in
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                content.classList.remove('scale-95');
-            }, 10);
-        }
-
-        function closeYearModal() {
-            const modal = document.getElementById('yearModal');
-            const content = document.getElementById('yearModalContent');
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300); // Wait for transition
+            selectEl.innerHTML = html;
         }
 
         function changeYear(year) {
             selectedYear = year;
-            closeYearModal();
-            document.getElementById('yearDisplayBtn').innerText = selectedYear;
             updateUI(); 
         }
 
@@ -300,6 +261,7 @@
                 document.getElementById('stateContainer').style.display = 'none';
                 document.getElementById('mainContent').classList.remove('hidden');
                 
+                initYearSelect(); 
                 updateUI();
             } catch (error) {
                 console.error("Fetch Data Error:", error);
@@ -354,13 +316,13 @@
             return { history, totalCost: pFirst.cost };
         }
 
-        // Custom HTML Tooltip 
+        // Custom HTML Tooltip
         const getOrCreateTooltip = (chart) => {
             let tooltipEl = chart.canvas.parentNode.querySelector('#custom-tooltip');
             if (!tooltipEl) {
                 tooltipEl = document.createElement('div');
                 tooltipEl.id = 'custom-tooltip';
-                tooltipEl.style.background = 'rgba(15, 23, 42, 0.95)';
+                tooltipEl.style.background = 'rgba(15, 23, 42, 0.98)';
                 tooltipEl.style.borderRadius = '12px';
                 tooltipEl.style.color = 'white';
                 tooltipEl.style.opacity = 1;
@@ -369,7 +331,7 @@
                 tooltipEl.style.transition = 'all 0.2s ease';
                 tooltipEl.style.zIndex = 100;
                 tooltipEl.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.3)';
-                tooltipEl.style.minWidth = '200px';
+                tooltipEl.style.minWidth = '220px';
                 tooltipEl.style.padding = '12px';
                 chart.canvas.parentNode.appendChild(tooltipEl);
             }
@@ -391,16 +353,16 @@
                 
                 let innerHtml = `
                     <button onclick="document.getElementById('custom-tooltip').style.opacity = '0'; document.getElementById('custom-tooltip').style.pointerEvents = 'none';" 
-                            class="absolute top-1.5 right-1.5 text-slate-400 hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-600 font-bold text-lg z-50">
+                            class="absolute top-2 right-2 text-slate-400 hover:text-white transition-colors w-7 h-7 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-600 font-bold text-lg z-50">
                         &times;
                     </button>
                 `;
                 
                 titleLines.forEach(title => {
-                    innerHtml += `<div class="font-bold text-xs sm:text-sm mb-2.5 text-white border-b border-slate-700 pb-2 pr-6">${title}</div>`;
+                    innerHtml += `<div class="font-bold text-sm mb-3 text-white border-b border-slate-700 pb-2 pr-6">${title}</div>`;
                 });
 
-                innerHtml += '<table class="w-full text-[10px] sm:text-xs">';
+                innerHtml += '<table class="w-full text-[11px] sm:text-xs">';
                 tooltip.body.forEach((bodyItem, i) => {
                     const colors = tooltip.labelColors[i];
                     const dataset = chart.data.datasets[tooltip.dataPoints[i].datasetIndex];
@@ -453,11 +415,11 @@
             const last = history[history.length - 1];
 
             let results = [
-                { id: 'lumpSum', name: "Lump Sum 💥", val: last.lumpSum, c: C.lumpSum, desc: "ทุ่มก้อนใหญ่ซื้อทีเดียวทุกต้นปี" },
-                { id: 'dcaLow', name: "Buy Low 🤩", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะ ซื้อตอนถูกที่สุดทุกเดือน" },
-                { id: 'dcaFirst', name: "DCA ต้นเดือน 🌱", val: last.dcaFirst, c: C.dcaFirst, desc: "ลงทุนวันแรกของทุกเดือน" },
-                { id: 'dcaHigh', name: "Buy High 🏔️", val: last.dcaHigh, c: C.dcaHigh, desc: "ซวยจัด ซื้อตอนแพงที่สุดทุกเดือน" },
-                { id: 'cash', name: "Cash 💸", val: last.cashValue, c: C.cash, desc: "ไม่ลงทุน โดนเงินเฟ้อกิน" }
+                { id: 'lumpSum', name: "Lump Sum 💥", val: last.lumpSum, c: C.lumpSum, desc: "ทุ่มเงินก้อนใหญ่ ซื้อทีเดียวตอนต้นปีเท่านั้น" },
+                { id: 'dcaLow', name: "Buy Low 🤩", val: last.dcaLow, c: C.dcaLow, desc: "จับจังหวะเทพ ซื้อราคาจุดต่ำสุดของเดือนเป๊ะๆ" },
+                { id: 'dcaFirst', name: "DCA ต้นเดือน 🌱", val: last.dcaFirst, c: C.dcaFirst, desc: "หลับตาหักบัญชี ซื้อทุกวันทำการแรกของเดือน" },
+                { id: 'dcaHigh', name: "Buy High 🏔️", val: last.dcaHigh, c: C.dcaHigh, desc: "คนซวยจัด ซื้อราคาที่แพงที่สุดของเดือนตลอด" },
+                { id: 'cash', name: "Cash 💸", val: last.cashValue, c: C.cash, desc: "เงินต้นอยู่ครบ แต่ซื้อของได้น้อยลง (โดนเงินเฟ้อ 3%)" }
             ];
 
             results.sort((a, b) => b.val - a.val);
@@ -490,7 +452,7 @@
                 insightBox.classList.add('hidden');
             }
 
-            // 🌟 วาด Cards (ปรับ Layout บนมือถือให้เป็น 2 คอลัมน์)
+            // วาด Cards
             let cardsHTML = '';
             results.forEach((r, idx) => {
                 const profit = r.val - totalCost;
@@ -501,18 +463,14 @@
                 const isLoss = profit < 0;
                 
                 const profitColor = isLoss ? 'text-red-600' : 'text-green-600';
-                
-                // 🌟 Logic สำคัญ: ถ้าเป็นผู้ชนะ ให้กินพื้นที่ 2 ช่องบนมือถือ (Full Width) นอกนั้นใช้ช่องเดียว (1/2 Width)
                 const gridSpan = isWinner ? 'col-span-2 md:col-span-1' : 'col-span-1 md:col-span-1';
+                const titleSize = isWinner ? 'text-base' : 'text-[12px] md:text-xs';
                 
-                // ปรับขนาดตัวหนังสือให้พอดีกับกรอบ (ผู้ชนะตัวใหญ่ กล่องอื่นตัวเล็กลงนิดนึงบนมือถือ)
-                const titleSize = isWinner ? 'text-sm md:text-base' : 'text-[11px] md:text-sm';
-                const profitSize = isWinner ? 'text-2xl md:text-3xl' : 'text-lg md:text-2xl';
-                const portValSize = isWinner ? 'text-sm' : 'text-[11px] md:text-sm';
+                // 🌟 ปรับขนาดฟอนต์ให้สมดุล (ผู้ชนะใหญ่ คนอื่นเล็กลงนิดหน่อย เพื่อไม่ให้เบียดกรอบ)
+                const profitSize = isWinner ? 'text-[26px] sm:text-3xl' : 'text-[20px] sm:text-xl';
                 
                 const profitLabel = isCash ? 'อำนาจซื้อที่หายไป (เงินเฟ้อ)' : (isWinner ? 'กำไร/ขาดทุน สุทธิ' : 'กำไร/ขาดทุน');
-                const portLabel = isCash ? 'มูลค่าที่แท้จริง' : 'พอร์ต';
-                const descText = isCash ? `เงินต้นอยู่ครบ แต่ซื้อของได้น้อยลง` : r.desc;
+                const portLabel = isCash ? 'มูลค่าแท้จริง' : 'พอร์ต';
 
                 cardsHTML += `
                     <div class="${gridSpan} bg-white rounded-xl p-3 sm:p-4 relative flex flex-col justify-between ${isWinner ? 'winner-card' : 'border border-slate-100 shadow-sm'}">
@@ -524,18 +482,18 @@
                                 <div class="${titleSize} font-bold text-slate-700 leading-tight truncate">${r.name}</div>
                             </div>
                             
-                            <div class="text-[9px] sm:text-[10px] text-slate-400 mb-0.5 font-semibold uppercase tracking-wider line-clamp-1" title="${profitLabel}">${profitLabel}</div>
-                            <div class="${profitSize} font-black ${profitColor} mb-1 tracking-tight truncate">
-                                ${fmtSign(profit)}
+                            <div class="text-[9px] text-slate-400 mb-0.5 font-semibold uppercase tracking-wider line-clamp-1" title="${profitLabel}">${profitLabel}</div>
+                            <div class="${profitSize} font-black ${profitColor} mb-1 tracking-tight leading-none pt-1">
+                                ${fmtThaiCompact(profit)}
                             </div>
-                            <div class="inline-block px-1.5 py-0.5 rounded ${isLoss ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'} text-[10px] sm:text-[11px] font-bold mb-2">
+                            <div class="inline-block px-1.5 py-0.5 mt-1.5 rounded ${isLoss ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'} text-[11px] font-bold mb-2">
                                 ${percent > 0 ? '+' : ''}${percent.toFixed(2)}%
                             </div>
                         </div>
 
                         <div class="pt-2 border-t border-slate-50">
-                            <div class="text-[10px] sm:text-[11px] text-slate-500">${portLabel}: <span class="font-bold text-slate-800 ${portValSize} truncate">${fmtNum(r.val)}</span></div>
-                            <div class="text-[9px] sm:text-[10px] text-slate-400 mt-0.5 leading-snug line-clamp-2" title="${descText}">(${descText})</div>
+                            <div class="text-[11px] text-slate-500">${portLabel}: <span class="font-bold text-slate-800 text-[13px]">${fmtNum(r.val)}</span></div>
+                            <div class="text-[10px] md:text-[11px] text-slate-500 mt-1 leading-snug">(${r.desc})</div>
                         </div>
                     </div>
                 `;
@@ -567,7 +525,7 @@
                     data: { labels, datasets },
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false, // 🌟 ปลดล็อกให้ Chart ไม่บิดเบี้ยว ยืดตาม Div แม่
+                        maintainAspectRatio: false, 
                         interaction: { mode: 'index', intersect: false },
                         scales: { 
                             y: { 
@@ -594,7 +552,7 @@
                             legend: {
                                 position: 'bottom',
                                 labels: { 
-                                    boxWidth: 10, 
+                                    boxWidth: 12, 
                                     usePointStyle: true, 
                                     padding: 16, 
                                     font: { size: 11, weight: '500' },
